@@ -1524,6 +1524,15 @@ export class HydrateSettingTab extends PluginSettingTab {
 			const statusText =
 				statusLabels[licenseInfo.status] ??
 				(licenseInfo.is_active ? "Active" : "Inactive");
+			// Style off the true lifecycle status, not the raw is_active flag
+			// (an expired-but-still-flagged-active key must not show green).
+			const isUsable =
+				licenseInfo.status !== undefined
+					? licenseInfo.status === "active"
+					: licenseInfo.is_active;
+			const statusClass = isUsable
+				? "hydrate-status-active"
+				: "hydrate-status-inactive";
 
 			statusDiv.empty();
 
@@ -1537,9 +1546,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 			tierP.createEl("strong", { text: "Tier: " });
 			tierP.createEl("span", {
 				text: tierName,
-				cls: licenseInfo.is_active
-					? "hydrate-status-active"
-					: "hydrate-status-inactive",
+				cls: statusClass,
 			});
 
 			// Status information
@@ -1547,9 +1554,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 			statusP.createEl("strong", { text: "Status: " });
 			statusP.createEl("span", {
 				text: statusText,
-				cls: licenseInfo.is_active
-					? "hydrate-status-active"
-					: "hydrate-status-inactive",
+				cls: statusClass,
 			});
 
 			// Expiration information (if available)
