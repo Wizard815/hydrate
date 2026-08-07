@@ -1513,7 +1513,17 @@ export class HydrateSettingTab extends PluginSettingTab {
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const licenseInfo = await (response.json as () => Promise<any>)();
 			const tierName = licenseInfo.tier?.toUpperCase() || "UNKNOWN";
-			const statusText = licenseInfo.is_active ? "Active" : "Inactive";
+			// Prefer the backend's computed lifecycle status (active /
+			// expired / inactive); fall back to the is_active flag for
+			// older backends that don't send `status`.
+			const statusLabels: Record<string, string> = {
+				active: "Active",
+				expired: "Expired",
+				inactive: "Inactive",
+			};
+			const statusText =
+				statusLabels[licenseInfo.status] ??
+				(licenseInfo.is_active ? "Active" : "Inactive");
 
 			statusDiv.empty();
 
