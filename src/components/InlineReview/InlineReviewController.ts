@@ -85,7 +85,10 @@ export class InlineReviewController {
     if (reactLeaf) {
       // File is in ReactView - switch to markdown in the same leaf
       this.switchedFromReactView = true;
-      this.reactViewKey = (reactLeaf.getViewState().state as any)?.viewKey || null;
+      const reactState = reactLeaf.getViewState().state as
+        | { viewKey?: string }
+        | undefined;
+      this.reactViewKey = reactState?.viewKey ?? null;
 
       // Set flag to prevent handleLayoutChange from switching back
       this.plugin.isInlineReviewActive = true;
@@ -113,7 +116,7 @@ export class InlineReviewController {
     }
 
     // Wait a tick for the view to initialize
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => window.setTimeout(resolve, 50));
 
     const markdownView = leaf.view as MarkdownView;
     if (!markdownView || markdownView.getViewType() !== 'markdown') {
@@ -216,7 +219,7 @@ export class InlineReviewController {
 
     // The CM6 EditorView is available on the editor object
     // @ts-ignore - Obsidian doesn't expose this in types
-    return (editor as any).cm as EditorView | undefined ?? null;
+    return (editor as unknown).cm as EditorView | undefined ?? null;
   }
 
   /**

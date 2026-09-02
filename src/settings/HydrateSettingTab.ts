@@ -317,7 +317,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 			.setHeading();
 
 		// Subscription Status Display
-		const subscriptionStatusSection = containerEl.createEl("div", {
+		const subscriptionStatusSection = containerEl.createDiv({
 			cls: "hydrate-subscription-status",
 		});
 
@@ -325,7 +325,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 			new Setting(subscriptionStatusSection)
 				.setName("Subscription status")
 				.setHeading();
-			const statusDiv = subscriptionStatusSection.createEl("div", {
+			const statusDiv = subscriptionStatusSection.createDiv({
 				cls: "hydrate-subscription-status-display",
 			});
 			statusDiv.createEl("p", { text: "Loading subscription status..." });
@@ -334,7 +334,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 			new Setting(subscriptionStatusSection)
 				.setName("Current tier: free")
 				.setHeading();
-			const freeInfoDiv = subscriptionStatusSection.createEl("div", {
+			const freeInfoDiv = subscriptionStatusSection.createDiv({
 				cls: "hydrate-subscription-info",
 			});
 			freeInfoDiv.createEl("p", {
@@ -377,7 +377,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 					}),
 			);
 		// Add a link to the Hydrate home page for subscriptions
-		const licenseLink = document.createElement("a");
+		const licenseLink = createEl("a");
 		licenseLink.href = "https://hydrateagent.com";
 		licenseLink.target = "_blank";
 		licenseLink.rel = "noopener noreferrer";
@@ -405,7 +405,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 					});
 				text.inputEl.type = "password";
 				// Add flat eye icon button
-				const eyeBtn = document.createElement("button");
+				const eyeBtn = createEl("button");
 				eyeBtn.type = "button";
 				eyeBtn.addClass("hydrate-eye-button");
 				const eyeChar = document.createTextNode("\u{1F441}");
@@ -431,7 +431,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 					});
 				text.inputEl.type = "password";
 				// Add flat eye icon button
-				const eyeBtn = document.createElement("button");
+				const eyeBtn = createEl("button");
 				eyeBtn.type = "button";
 				eyeBtn.addClass("hydrate-eye-button");
 				const eyeChar2 = document.createTextNode("\u{1F441}");
@@ -457,7 +457,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 					});
 				text.inputEl.type = "password";
 				// Add flat eye icon button
-				const eyeBtn = document.createElement("button");
+				const eyeBtn = createEl("button");
 				eyeBtn.type = "button";
 				eyeBtn.addClass("hydrate-eye-button");
 				const eyeChar3 = document.createTextNode("\u{1F441}");
@@ -476,7 +476,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 		const formatRegistrySection = containerEl.createDiv(
 			"hydrate-settings-section",
 		);
-		const formatHeadingEl = formatRegistrySection.createEl("div", {
+		const formatHeadingEl = formatRegistrySection.createDiv({
 			cls: "hydrate-settings-heading",
 		});
 		new Setting(formatHeadingEl)
@@ -528,7 +528,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 		const rulesRegistrySection = containerEl.createDiv(
 			"hydrate-settings-section",
 		);
-		const rulesHeadingEl = rulesRegistrySection.createEl("div", {
+		const rulesHeadingEl = rulesRegistrySection.createDiv({
 			cls: "hydrate-settings-heading",
 		});
 		new Setting(rulesHeadingEl).setName("Rules registry").setHeading();
@@ -571,7 +571,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 		const mcpServersSection = containerEl.createDiv(
 			"hydrate-settings-section",
 		);
-		const mcpHeadingEl = mcpServersSection.createEl("div", {
+		const mcpHeadingEl = mcpServersSection.createDiv({
 			cls: "hydrate-settings-heading",
 		});
 		new Setting(mcpHeadingEl).setName("Servers").setHeading();
@@ -787,7 +787,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 						}),
 				);
 
-			const indexingDesc = document.createDocumentFragment();
+			const indexingDesc = createFragment();
 			indexingDesc.append(
 				"Scan the entire vault and generate embeddings for specified file types using the configured remote endpoint.",
 				indexingDesc.createEl("br"),
@@ -1160,13 +1160,13 @@ export class HydrateSettingTab extends PluginSettingTab {
 
 			// Server Info
 			const serverInfo = serverRow.createDiv("hydrate-mcp-server-info");
-			const serverTitle = serverInfo.createEl("div", {
+			const serverTitle = serverInfo.createDiv({
 				cls: "hydrate-mcp-server-title",
 			});
 			serverTitle.createEl("strong", { text: server.name || server.id });
 
 			// Health Indicator
-			const healthIndicator = serverTitle.createEl("span", {
+			const healthIndicator = serverTitle.createSpan({
 				cls: "hydrate-mcp-health",
 			});
 			const healthStatus = this.getServerHealthStatus(server);
@@ -1176,12 +1176,12 @@ export class HydrateSettingTab extends PluginSettingTab {
 
 			// Optional: Show basic transport type only
 			if (server.transport?.type === "sse" || server.command) {
-				const serverDetails = serverInfo.createEl("div", {
+				const serverDetails = serverInfo.createDiv({
 					cls: "hydrate-mcp-server-details",
 				});
 				const transportType =
 					server.transport?.type === "sse" ? "SSE" : "STDIO";
-				serverDetails.createEl("span", { text: transportType });
+				serverDetails.createSpan({ text: transportType });
 			}
 
 			// Server Controls
@@ -1544,7 +1544,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 			// Tier information
 			const tierP = infoContainer.createEl("p");
 			tierP.createEl("strong", { text: "Tier: " });
-			tierP.createEl("span", {
+			tierP.createSpan({
 				text: tierName,
 				cls: statusClass,
 			});
@@ -1552,7 +1552,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 			// Status information
 			const statusP = infoContainer.createEl("p");
 			statusP.createEl("strong", { text: "Status: " });
-			statusP.createEl("span", {
+			statusP.createSpan({
 				text: statusText,
 				cls: statusClass,
 			});
@@ -1685,7 +1685,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 					text: "Are you sure you want to re-register your API keys? This will revoke all previously registered keys and count against your annual quota.",
 				});
 
-				const buttonContainer = contentEl.createEl("div", {
+				const buttonContainer = contentEl.createDiv({
 					cls: "hydrate-modal-button-container",
 				});
 				buttonContainer.addClass("hydrate-button-container");

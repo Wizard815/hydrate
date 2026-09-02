@@ -775,7 +775,7 @@ export const handleSuggestionSelect = (
 	const newCursorPos =
 		view.triggerStartIndex + selectedEntry.slashCommandTrigger.length + 1;
 	view.textInput.focus();
-	requestAnimationFrame(() => {
+	window.requestAnimationFrame(() => {
 		view.textInput.setSelectionRange(newCursorPos, newCursorPos);
 	});
 };
@@ -831,7 +831,7 @@ export const handleInputChange = (view: HydrateView): void => {
 					// Position cursor
 					const newCursorPos = beforeTrigger.length;
 					view.textInput.focus();
-					requestAnimationFrame(() => {
+					window.requestAnimationFrame(() => {
 						view.textInput.setSelectionRange(
 							newCursorPos,
 							newCursorPos,
@@ -887,7 +887,7 @@ export const handleInputChange = (view: HydrateView): void => {
 							(selectedEntry.slashCommandTrigger?.length || 0) +
 							1;
 						view.textInput.focus();
-						requestAnimationFrame(() => {
+						window.requestAnimationFrame(() => {
 							view.textInput.setSelectionRange(
 								newCursorPos,
 								newCursorPos,

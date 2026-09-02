@@ -25,7 +25,7 @@ export class ReviewToolbar {
   }
 
   private createToolbar(parentEl: HTMLElement): HTMLElement {
-    const toolbar = document.createElement('div');
+    const toolbar = createDiv();
     toolbar.className = 'hydrate-review-toolbar';
 
     // Make it draggable
@@ -58,16 +58,16 @@ export class ReviewToolbar {
     });
 
     // Header with count
-    const header = document.createElement('div');
+    const header = createDiv();
     header.className = 'hydrate-review-toolbar-header';
 
-    this.countEl = document.createElement('span');
+    this.countEl = createSpan();
     this.countEl.className = 'hydrate-review-toolbar-count';
     this.countEl.textContent = '0 changes remaining';
     header.appendChild(this.countEl);
 
     // Jump to next button
-    const jumpBtn = document.createElement('button');
+    const jumpBtn = createEl('button');
     jumpBtn.className = 'hydrate-review-toolbar-btn hydrate-review-jump';
     jumpBtn.innerHTML = '&#8595;'; // Down arrow
     jumpBtn.title = 'Jump to next change';
@@ -77,20 +77,20 @@ export class ReviewToolbar {
     toolbar.appendChild(header);
 
     // Button container
-    const buttons = document.createElement('div');
+    const buttons = createDiv();
     buttons.className = 'hydrate-review-toolbar-buttons';
 
-    const acceptAllBtn = document.createElement('button');
+    const acceptAllBtn = createEl('button');
     acceptAllBtn.className = 'hydrate-review-toolbar-btn hydrate-review-accept-all';
     acceptAllBtn.textContent = 'Accept All';
     acceptAllBtn.onclick = () => this.callbacks.onAcceptAll();
 
-    const rejectAllBtn = document.createElement('button');
+    const rejectAllBtn = createEl('button');
     rejectAllBtn.className = 'hydrate-review-toolbar-btn hydrate-review-reject-all';
     rejectAllBtn.textContent = 'Reject All';
     rejectAllBtn.onclick = () => this.callbacks.onRejectAll();
 
-    const doneBtn = document.createElement('button');
+    const doneBtn = createEl('button');
     doneBtn.className = 'hydrate-review-toolbar-btn hydrate-review-done';
     doneBtn.textContent = 'Done';
     doneBtn.onclick = () => this.callbacks.onDone();

@@ -286,6 +286,6 @@ export class MCPServersConfigModal extends Modal {
 		errorEl.addClass("hydrate-mcp-error");
 		errorEl.textContent = message;
 
-		setTimeout(() => errorEl.remove(), 5000);
+		window.setTimeout(() => errorEl.remove(), 5000);
 	}
 }

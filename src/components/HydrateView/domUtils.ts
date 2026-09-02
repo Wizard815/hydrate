@@ -134,7 +134,7 @@ export function addMessageToChat(
 		`;
 
 		images.forEach((img) => {
-			const imgEl = document.createElement("img");
+			const imgEl = createEl("img");
 			imgEl.style.cssText = `
 				max-width: 200px;
 				max-height: 200px;
@@ -190,7 +190,7 @@ export function addMessageToChat(
 						setIcon(copyButton, "check");
 						copyButton.children[0]?.setAttribute("width", "14");
 						copyButton.children[0]?.setAttribute("height", "14");
-						setTimeout(() => {
+						window.setTimeout(() => {
 							setIcon(copyButton, "copy");
 							copyButton.children[0]?.setAttribute("width", "14");
 							copyButton.children[0]?.setAttribute("height", "14");
@@ -238,7 +238,7 @@ export function addMessageToChat(
 						copyButton.children[0]?.setAttribute("width", "14");
 						copyButton.children[0]?.setAttribute("height", "14");
 
-						setTimeout(() => {
+						window.setTimeout(() => {
 							// Revert back to copy icon
 							setIcon(copyButton, "copy");
 							copyButton.children[0]?.setAttribute("width", "14");
@@ -277,7 +277,7 @@ export function addMessageToChat(
 
 			let lastIndex = 0;
 			let match;
-			const fragment = document.createDocumentFragment();
+			const fragment = createFragment();
 
 			while ((match = commandRegex.exec(content)) !== null) {
 				if (match.index > lastIndex) {
@@ -287,7 +287,7 @@ export function addMessageToChat(
 						),
 					);
 				}
-				const strongEl = document.createElement("strong");
+				const strongEl = createEl("strong");
 				strongEl.addClass("hydrate-slash-command-display");
 				strongEl.textContent = match[0];
 				fragment.appendChild(strongEl);
@@ -307,7 +307,7 @@ export function addMessageToChat(
 		messageEl.createSpan({ text: content });
 	}
 
-	requestAnimationFrame(() => {
+	window.requestAnimationFrame(() => {
 		chatContainer.scrollTop = chatContainer.scrollHeight;
 	});
 
@@ -331,7 +331,7 @@ export function addMessageToChat(
 			// Refresh context suggestions after new messages (but not for system messages)
 			if (role === "user" || role === "agent") {
 				// Use setTimeout to avoid blocking the UI
-				setTimeout(() => {
+				window.setTimeout(() => {
 					void view.refreshContextSuggestions?.();
 				}, 1000);
 			}
@@ -411,7 +411,7 @@ export function createStreamingAgentMessage(view: HydrateView): {
 	let thinkingContent: HTMLElement | null = null;
 
 	const scrollToBottom = () => {
-		requestAnimationFrame(() => {
+		window.requestAnimationFrame(() => {
 			chatContainer.scrollTop = chatContainer.scrollHeight;
 		});
 	};
@@ -424,14 +424,14 @@ export function createStreamingAgentMessage(view: HydrateView): {
 
 	const renderThinking = (text: string) => {
 		if (!thinkingContent) {
-			const details = document.createElement("details");
+			const details = createEl("details");
 			details.className = "hydrate-thinking-section";
 			details.open = true;
-			const summary = document.createElement("summary");
+			const summary = createEl("summary");
 			summary.className = "hydrate-thinking-summary";
 			summary.textContent = "Model thinking...";
 			details.appendChild(summary);
-			thinkingContent = document.createElement("div");
+			thinkingContent = createDiv();
 			thinkingContent.className = "hydrate-thinking-content";
 			details.appendChild(thinkingContent);
 			el.insertBefore(details, textDiv);
@@ -480,7 +480,7 @@ export function createStreamingAgentMessage(view: HydrateView): {
 					setIcon(copyButton, "check");
 					copyButton.children[0]?.setAttribute("width", "14");
 					copyButton.children[0]?.setAttribute("height", "14");
-					setTimeout(() => {
+					window.setTimeout(() => {
 						setIcon(copyButton, "copy");
 						copyButton.children[0]?.setAttribute("width", "14");
 						copyButton.children[0]?.setAttribute("height", "14");
@@ -507,7 +507,7 @@ export function createStreamingAgentMessage(view: HydrateView): {
 			};
 			view.currentChatTurns.push(chatTurn);
 
-			setTimeout(() => {
+			window.setTimeout(() => {
 				void view.refreshContextSuggestions?.();
 			}, 1000);
 		}
@@ -617,10 +617,10 @@ export function setLoadingState(
 			const message = customMessage || "Agent is thinking";
 
 			// Create animated dots
-			loadingIndicator.createEl("span", {
+			loadingIndicator.createSpan({
 				text: message,
 			});
-			loadingIndicator.createEl("span", {
+			loadingIndicator.createSpan({
 				cls: "hydrate-loading-dots",
 				text: "...",
 			});
@@ -629,7 +629,7 @@ export function setLoadingState(
 
 			// Scroll to show the loading indicator
 			if (chatContainer) {
-				requestAnimationFrame(() => {
+				window.requestAnimationFrame(() => {
 					chatContainer.scrollTop = chatContainer.scrollHeight;
 				});
 			}
@@ -695,7 +695,7 @@ export const renderImagePreviews = (view: HydrateView): void => {
 		const inputSection = containerEl.querySelector(".hydrate-input-section");
 		if (!inputSection) return;
 
-		imagePreviews = document.createElement("div");
+		imagePreviews = createDiv();
 		imagePreviews.className = "hydrate-image-previews";
 		imagePreviews.style.cssText = `
 			display: flex;
@@ -720,7 +720,7 @@ export const renderImagePreviews = (view: HydrateView): void => {
 
 	// Create preview for each image
 	view.attachedImages.forEach((img, index) => {
-		const preview = document.createElement("div");
+		const preview = createDiv();
 		preview.className = "hydrate-image-preview";
 		preview.style.cssText = `
 			position: relative;
@@ -731,7 +731,7 @@ export const renderImagePreviews = (view: HydrateView): void => {
 			border: 1px solid var(--background-modifier-border);
 		`;
 
-		const imgEl = document.createElement("img");
+		const imgEl = createEl("img");
 		imgEl.src = `data:${img.mimeType};base64,${img.data}`;
 		imgEl.style.cssText = `
 			width: 100%;
@@ -740,7 +740,7 @@ export const renderImagePreviews = (view: HydrateView): void => {
 		`;
 		imgEl.alt = img.filename || `Image ${index + 1}`;
 
-		const removeBtn = document.createElement("button");
+		const removeBtn = createEl("button");
 		removeBtn.className = "hydrate-image-remove";
 		removeBtn.innerHTML = "×";
 		removeBtn.style.cssText = `
@@ -957,7 +957,7 @@ export function selectNoteSearchResult(view: HydrateView, index: number): void {
 	// Position cursor
 	const newCursorPos = beforeTrigger.length;
 	view.textInput.focus();
-	requestAnimationFrame(() => {
+	window.requestAnimationFrame(() => {
 		view.textInput.setSelectionRange(newCursorPos, newCursorPos);
 	});
 }

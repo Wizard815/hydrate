@@ -113,7 +113,7 @@ describe("runNonEditToolCalls", () => {
 	it("keeps results in input order regardless of individual settle timing", async () => {
 		const execute = vi.fn(async (toolCall: BackendToolCall) => {
 			const delay = toolCall.id === "a" ? 10 : 0;
-			await new Promise((resolve) => setTimeout(resolve, delay));
+			await new Promise((resolve) => window.setTimeout(resolve, delay));
 			return `r-${toolCall.id}`;
 		});
 

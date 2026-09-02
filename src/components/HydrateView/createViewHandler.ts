@@ -4,6 +4,7 @@ import type { HydrateView } from "./hydrateView";
 import { addMessageToChat, setLoadingState } from "./domUtils";
 import { devLog } from "../../utils/logger";
 import { REACT_HOST_VIEW_TYPE } from "../../main";
+import { ReactViewHost } from "../../ReactViewHost";
 
 interface GenerateViewResponse {
 	content: string;
@@ -416,8 +417,8 @@ async function switchFileToReactView(
 
 		// Handle ReactViewHost - force remount by re-setting state with new refreshToken
 		if (
-			leafView.getViewType() === REACT_HOST_VIEW_TYPE &&
-			(leafView as any).currentFilePath === filePath
+			leafView instanceof ReactViewHost &&
+			leafView.currentFilePath === filePath
 		) {
 			devLog.debug(`Refreshing React view for ${filePath}`);
 			leaf.setViewState({

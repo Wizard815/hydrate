@@ -24,13 +24,15 @@ export function createDebounce<Args extends unknown[]>(
 	fn: (...args: Args) => void,
 	ms: number,
 ): Throttled<Args> {
-	let timer: ReturnType<typeof setTimeout> | null = null;
+	// window.setTimeout returns a number; the bare Node setTimeout returns a
+	// Timeout object. Popout windows need the window-scoped one.
+	let timer: number | null = null;
 
 	const debounced = ((...args: Args) => {
 		if (timer !== null) {
-			clearTimeout(timer);
+			window.clearTimeout(timer);
 		}
-		timer = setTimeout(() => {
+		timer = window.setTimeout(() => {
 			timer = null;
 			fn(...args);
 		}, ms);
@@ -38,7 +40,7 @@ export function createDebounce<Args extends unknown[]>(
 
 	debounced.cancel = () => {
 		if (timer !== null) {
-			clearTimeout(timer);
+			window.clearTimeout(timer);
 			timer = null;
 		}
 	};
@@ -50,13 +52,15 @@ export function createThrottle<Args extends unknown[]>(
 	fn: (...args: Args) => void,
 	ms: number,
 ): Throttled<Args> {
-	let timer: ReturnType<typeof setTimeout> | null = null;
+	// window.setTimeout returns a number; the bare Node setTimeout returns a
+	// Timeout object. Popout windows need the window-scoped one.
+	let timer: number | null = null;
 	let pendingArgs: Args | null = null;
 
 	const throttled = ((...args: Args) => {
 		pendingArgs = args;
 		if (timer === null) {
-			timer = setTimeout(() => {
+			timer = window.setTimeout(() => {
 				timer = null;
 				const args = pendingArgs;
 				pendingArgs = null;
@@ -69,7 +73,7 @@ export function createThrottle<Args extends unknown[]>(
 
 	throttled.cancel = () => {
 		if (timer !== null) {
-			clearTimeout(timer);
+			window.clearTimeout(timer);
 			timer = null;
 		}
 		pendingArgs = null;

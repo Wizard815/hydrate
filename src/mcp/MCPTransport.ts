@@ -61,18 +61,18 @@ export class StdioTransport extends EventEmitter implements MCPTransport {
 
 			// Wait a bit for the process to start
 			await new Promise((resolve, reject) => {
-				const timeout = setTimeout(() => {
+				const timeout = window.setTimeout(() => {
 					reject(new Error("Connection timeout"));
 				}, 5000);
 
 				this.process?.on("spawn", () => {
-					clearTimeout(timeout);
+					window.clearTimeout(timeout);
 					this.connected = true;
 					resolve(void 0);
 				});
 
 				this.process?.on("error", (error) => {
-					clearTimeout(timeout);
+					window.clearTimeout(timeout);
 					reject(error);
 				});
 			});
@@ -103,7 +103,7 @@ export class StdioTransport extends EventEmitter implements MCPTransport {
 			// Try graceful shutdown first
 			processRef?.kill("SIGTERM");
 
-			const timeout = setTimeout(() => {
+			const timeout = window.setTimeout(() => {
 				// Force kill if graceful shutdown fails
 				if (processRef && !processRef.killed) {
 					processRef.kill("SIGKILL");
@@ -112,7 +112,7 @@ export class StdioTransport extends EventEmitter implements MCPTransport {
 			}, 3000);
 
 			processRef?.on("exit", () => {
-				clearTimeout(timeout);
+				window.clearTimeout(timeout);
 				cleanup();
 			});
 		});

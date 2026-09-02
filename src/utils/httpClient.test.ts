@@ -2,10 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { httpRequest } from "./httpClient";
 
 describe("httpRequest", () => {
-	const originalFetch = global.fetch;
+	const originalFetch = window.fetch;
 
 	afterEach(() => {
-		global.fetch = originalFetch;
+		window.fetch = originalFetch;
 	});
 
 	it("exposes body and contentType alongside the existing ok/status/json/text fields", async () => {
@@ -16,7 +16,7 @@ describe("httpRequest", () => {
 				headers: { "Content-Type": "text/event-stream" },
 			}),
 		);
-		global.fetch = fetchMock as unknown as typeof fetch;
+		window.fetch = fetchMock as unknown as typeof fetch;
 
 		const response = await httpRequest("https://example.com/chat");
 
@@ -30,7 +30,7 @@ describe("httpRequest", () => {
 		const fetchMock = vi
 			.fn()
 			.mockResolvedValue(new Response(null, { status: 204 }));
-		global.fetch = fetchMock as unknown as typeof fetch;
+		window.fetch = fetchMock as unknown as typeof fetch;
 
 		const response = await httpRequest("https://example.com/chat");
 
@@ -39,7 +39,7 @@ describe("httpRequest", () => {
 
 	it("returns null body and empty contentType on network failure", async () => {
 		const fetchMock = vi.fn().mockRejectedValue(new Error("network down"));
-		global.fetch = fetchMock as unknown as typeof fetch;
+		window.fetch = fetchMock as unknown as typeof fetch;
 
 		const response = await httpRequest("https://example.com/chat");
 
@@ -56,7 +56,7 @@ describe("httpRequest", () => {
 				headers: { "Content-Type": "application/json" },
 			}),
 		);
-		global.fetch = fetchMock as unknown as typeof fetch;
+		window.fetch = fetchMock as unknown as typeof fetch;
 
 		const response = await httpRequest("https://example.com/chat");
 
