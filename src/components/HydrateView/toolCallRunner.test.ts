@@ -143,7 +143,7 @@ describe("runNonEditToolCalls", () => {
 
 	it("converts a non-Error throw via String(thrown)", async () => {
 		const execute = vi.fn(async () => {
-			// eslint-disable-next-line @typescript-eslint/no-throw-literal
+			// eslint-disable-next-line @typescript-eslint/only-throw-error -- this test asserts non-Error throws are handled
 			throw "plain string failure";
 		});
 

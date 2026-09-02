@@ -36,13 +36,18 @@ export function describeBackendError(error: unknown): string {
 	return `Error: ${message}`;
 }
 
+/**
+ * Declared with property syntax rather than method shorthand: these are
+ * standalone callbacks, never bound to a `this`, and property syntax is both
+ * contravariant-checked and what lets callers pass detached functions safely.
+ */
 export interface BackendResponseHooks {
-	setConversationId(id: string): void;
-	onConversationRestarted(): void;
-	updateContextMeter(state: { text: string; warning: boolean }): void;
-	addAgentMessage(message: HistoryMessage): void | Promise<void>;
-	processToolCalls(toolCalls: BackendToolCall[]): Promise<void>;
-	setLoading(loading: boolean): void;
+	setConversationId: (id: string) => void;
+	onConversationRestarted: () => void;
+	updateContextMeter: (state: { text: string; warning: boolean }) => void;
+	addAgentMessage: (message: HistoryMessage) => void | Promise<void>;
+	processToolCalls: (toolCalls: BackendToolCall[]) => Promise<void>;
+	setLoading: (loading: boolean) => void;
 }
 
 /**
