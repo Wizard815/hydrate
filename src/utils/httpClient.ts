@@ -28,6 +28,10 @@ export async function httpRequest(
 	const { method = "GET", headers = {}, body, signal } = options;
 
 	try {
+		// Obsidian's requestUrl buffers the entire response and cannot expose
+		// a ReadableStream, which the chat transport needs for SSE
+		// (see src/utils/sseClient.ts). This is the one place fetch is
+		// required; every non-streaming call uses requestUrl.
 		const response = await fetch(url, {
 			method,
 			headers,

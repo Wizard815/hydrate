@@ -1,14 +1,16 @@
 // src/components/HydrateView/createViewHandler.ts
-import { TFile, MarkdownView } from "obsidian";
+import {
+	TFile,
+	MarkdownView,
+	requestUrl,
+	type RequestUrlResponse,
+} from "obsidian";
 import type { HydrateView } from "./hydrateView";
 import { addMessageToChat, setLoadingState } from "./domUtils";
 import { devLog } from "../../utils/logger";
 import { REACT_HOST_VIEW_TYPE } from "../../main";
 import { ReactViewHost } from "../../ReactViewHost";
-import {
-	parseJsonResponse,
-	type ApiErrorBody,
-} from "../../settings/licenseTypes";
+import { type ApiErrorBody } from "../../settings/licenseTypes";
 
 interface GenerateViewResponse {
 	content: string;
@@ -17,6 +19,18 @@ interface GenerateViewResponse {
 interface ScaffoldResponse {
 	viewName: string;
 	sampleMarkdown: string;
+}
+
+/**
+ * requestUrl exposes `.json` as a getter that throws when the body is not
+ * JSON (a proxy's HTML error page, for example). Read it defensively.
+ */
+function readJson<T>(res: RequestUrlResponse): T | undefined {
+	try {
+		return res.json as T;
+	} catch {
+		return undefined;
+	}
 }
 
 // System prompt for scaffold generation (view name + sample markdown)
@@ -319,9 +333,11 @@ async function generateScaffold(
 Remember to return ONLY valid JSON with viewName and sampleMarkdown fields.`;
 
 	try {
-		const fetchResponse = await fetch(`${backendUrl}/generate-view`, {
+		const fetchResponse = await requestUrl({
+			url: `${backendUrl}/generate-view`,
 			method: "POST",
 			headers,
+			throw: false,
 			body: JSON.stringify({
 				system_prompt: SCAFFOLD_GENERATION_SYSTEM_PROMPT,
 				user_prompt: userPrompt,
@@ -329,15 +345,14 @@ Remember to return ONLY valid JSON with viewName and sampleMarkdown fields.`;
 			}),
 		});
 
-		if (!fetchResponse.ok) {
-			const errorData =
-				await parseJsonResponse<ApiErrorBody>(fetchResponse);
+		if (fetchResponse.status < 200 || fetchResponse.status >= 300) {
+			const errorData = readJson<ApiErrorBody>(fetchResponse);
 			throw new Error(
-				errorData.detail ?? `Server error: ${fetchResponse.status}`,
+				errorData?.detail ?? `Server error: ${fetchResponse.status}`,
 			);
 		}
 
-		const response = (await fetchResponse.json()) as GenerateViewResponse;
+		const response = readJson<GenerateViewResponse>(fetchResponse);
 
 		if (!response || !response.content) {
 			throw new Error("No response from scaffold generation");
@@ -635,9 +650,11 @@ Return ONLY the JSX code, starting with "import React from 'react';".`;
 		if (settings.anthropicApiKey) headers["X-Anthropic-Key"] = settings.anthropicApiKey;
 		if (settings.googleApiKey) headers["X-Gemini-Key"] = settings.googleApiKey;
 
-		const fetchResponse = await fetch(`${backendUrl}/generate-view`, {
+		const fetchResponse = await requestUrl({
+			url: `${backendUrl}/generate-view`,
 			method: "POST",
 			headers,
+			throw: false,
 			body: JSON.stringify({
 				system_prompt: VIEW_GENERATION_SYSTEM_PROMPT,
 				user_prompt: userPrompt,
@@ -645,15 +662,14 @@ Return ONLY the JSX code, starting with "import React from 'react';".`;
 			}),
 		});
 
-		if (!fetchResponse.ok) {
-			const errorData =
-				await parseJsonResponse<ApiErrorBody>(fetchResponse);
+		if (fetchResponse.status < 200 || fetchResponse.status >= 300) {
+			const errorData = readJson<ApiErrorBody>(fetchResponse);
 			throw new Error(
-				errorData.detail ?? `Server error: ${fetchResponse.status}`
+				errorData?.detail ?? `Server error: ${fetchResponse.status}`
 			);
 		}
 
-		const response = (await fetchResponse.json()) as GenerateViewResponse;
+		const response = readJson<GenerateViewResponse>(fetchResponse);
 
 		if (!response || !response.content) {
 			throw new Error("No response from view generation");
@@ -864,9 +880,11 @@ Update the component according to the user's feedback. Return ONLY the complete 
 		if (settings.anthropicApiKey) headers["X-Anthropic-Key"] = settings.anthropicApiKey;
 		if (settings.googleApiKey) headers["X-Gemini-Key"] = settings.googleApiKey;
 
-		const fetchResponse = await fetch(`${backendUrl}/generate-view`, {
+		const fetchResponse = await requestUrl({
+			url: `${backendUrl}/generate-view`,
 			method: "POST",
 			headers,
+			throw: false,
 			body: JSON.stringify({
 				system_prompt: VIEW_GENERATION_SYSTEM_PROMPT,
 				user_prompt: userPrompt,
@@ -874,15 +892,14 @@ Update the component according to the user's feedback. Return ONLY the complete 
 			}),
 		});
 
-		if (!fetchResponse.ok) {
-			const errorData =
-				await parseJsonResponse<ApiErrorBody>(fetchResponse);
+		if (fetchResponse.status < 200 || fetchResponse.status >= 300) {
+			const errorData = readJson<ApiErrorBody>(fetchResponse);
 			throw new Error(
-				errorData.detail ?? `Server error: ${fetchResponse.status}`
+				errorData?.detail ?? `Server error: ${fetchResponse.status}`
 			);
 		}
 
-		const response = (await fetchResponse.json()) as GenerateViewResponse;
+		const response = readJson<GenerateViewResponse>(fetchResponse);
 
 		if (!response || !response.content) {
 			throw new Error("No response from view generation");
