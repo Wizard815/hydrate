@@ -419,6 +419,8 @@ async function switchFileToReactView(
 					refreshToken: refreshToken,
 				},
 				active: leaf === app.workspace.getLeaf(),
+			}).catch((error: unknown) => {
+				devLog.error("Failed to set view state", error);
 			});
 		}
 
@@ -436,6 +438,8 @@ async function switchFileToReactView(
 					refreshToken: refreshToken,
 				},
 				active: leaf === app.workspace.getLeaf(),
+			}).catch((error: unknown) => {
+				devLog.error("Failed to set view state", error);
 			});
 		}
 	});

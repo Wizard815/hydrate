@@ -14,6 +14,7 @@ import {
 import { ReviewToolbar, createReviewToolbar } from './ReviewToolbar';
 import { ReviewResult, HydrateChangeEventDetail } from './types';
 import { DiffReviewResult } from '../DiffReviewModal';
+import { devLog } from '../../utils/logger';
 
 /**
  * Obsidian's Editor wraps a CM6 EditorView on `.cm`, but does not declare it
@@ -175,7 +176,11 @@ export class InlineReviewController {
     this.toolbar = createReviewToolbar(markdownView, {
       onAcceptAll: () => this.handleAcceptAll(),
       onRejectAll: () => this.handleRejectAll(),
-      onDone: () => this.handleDone(),
+      onDone: () => {
+        this.handleDone().catch((error: unknown) => {
+          devLog.error('Failed to finish inline review', error);
+        });
+      },
       onJumpToNext: () => this.jumpToNextChange(),
     });
     this.toolbar.updateCount(this.manager.getRemainingCount());
@@ -435,7 +440,9 @@ export class InlineReviewController {
    */
   public destroy(): void {
     if (this.isActive()) {
-      this.cancel();
+      this.cancel().catch((error: unknown) => {
+        devLog.error('Failed to cancel inline review during destroy', error);
+      });
     }
     this.cleanupOrphanedToolbars();
   }

@@ -397,7 +397,9 @@ export class HydrateView extends ItemView {
 		);
 		// Handle paste for images
 		this.textInput.addEventListener("paste", (e: ClipboardEvent) => {
-			handlePaste(this, e);
+			handlePaste(this, e).catch((error: unknown) => {
+				devLog.error("Paste handling failed", error);
+			});
 		});
 		sendButton.addEventListener("click", () => void handleSend(this));
 		clearButton.addEventListener("click", () => void handleClear(this));
@@ -436,9 +438,11 @@ export class HydrateView extends ItemView {
 				}
 			}
 		});
-		container.addEventListener("drop", (e) =>
-			handleDrop(this, e as DragEvent),
-		);
+		container.addEventListener("drop", (e) => {
+			handleDrop(this, e as DragEvent).catch((error: unknown) => {
+				devLog.error("Drop handling failed", error);
+			});
+		});
 
 		// Auto-adjust textarea height on input
 		this.textInput.addEventListener("input", adjustTextareaHeight);
