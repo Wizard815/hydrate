@@ -13,8 +13,17 @@ import {
   setChangesEffect,
 } from './ChangeDecorationPlugin';
 import { ReviewToolbar, createReviewToolbar } from './ReviewToolbar';
-import { ReviewResult, PendingChange } from './types';
+import { ReviewResult, HydrateChangeEventDetail } from './types';
 import { DiffReviewResult } from '../DiffReviewModal';
+
+/**
+ * Obsidian's Editor wraps a CM6 EditorView on `.cm`, but does not declare it
+ * in its public types. This is the documented escape hatch used by CM6-aware
+ * community plugins.
+ */
+interface EditorWithCm {
+  cm?: EditorView;
+}
 
 /**
  * Controller that orchestrates the inline review experience.
@@ -218,14 +227,15 @@ export class InlineReviewController {
     if (!editor) return null;
 
     // The CM6 EditorView is available on the editor object
-    // @ts-ignore - Obsidian doesn't expose this in types
-    return (editor as unknown).cm as EditorView | undefined ?? null;
+    return (editor as unknown as EditorWithCm).cm ?? null;
   }
 
   /**
    * Handle hover widget accept event
    */
-  private handleChangeAccepted = (event: CustomEvent) => {
+  private handleChangeAccepted = (
+    event: CustomEvent<HydrateChangeEventDetail>,
+  ) => {
     const { changeId } = event.detail;
     this.manager.acceptChange(changeId);
   };
@@ -233,7 +243,9 @@ export class InlineReviewController {
   /**
    * Handle hover widget reject event
    */
-  private handleChangeRejected = (event: CustomEvent) => {
+  private handleChangeRejected = (
+    event: CustomEvent<HydrateChangeEventDetail>,
+  ) => {
     const { changeId } = event.detail;
     this.manager.rejectChange(changeId);
   };

@@ -41,3 +41,8 @@ export interface ReviewEvent {
 }
 
 export type ReviewEventCallback = (event: ReviewEvent) => void;
+
+/** Detail payload for the hydrate-change-accepted / -rejected CustomEvents. */
+export interface HydrateChangeEventDetail {
+  changeId: string;
+}
