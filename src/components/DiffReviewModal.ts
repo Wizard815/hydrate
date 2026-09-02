@@ -1,5 +1,11 @@
 import { App, Modal, ButtonComponent } from "obsidian";
-import { diff_match_patch, Diff, patch_obj } from "diff-match-patch";
+import diff_match_patch from "diff-match-patch";
+
+type Diff = diff_match_patch.Diff;
+type patch_obj = diff_match_patch.patch_obj;
+// @types/diff-match-patch types patch_make/patch_apply against the patch_obj
+// *constructor* rather than an instance. Cast once at each boundary.
+type DmpPatchList = Parameters<diff_match_patch["patch_apply"]>[0];
 import { devLog } from "../utils/logger";
 import HydratePlugin from "../main"; // May need plugin/app access later
 
@@ -112,7 +118,7 @@ export class DiffReviewModal extends Modal {
 		this.patches = this.dmp.patch_make(
 			this.originalContent,
 			this.proposedContent,
-		);
+		) as unknown as patch_obj[];
 		this.hunks = []; // Reset hunks
 
 		this.patches.forEach((patch, index) => {
@@ -294,7 +300,7 @@ export class DiffReviewModal extends Modal {
 		}
 
 		const [newContent, results] = this.dmp.patch_apply(
-			selectedPatches,
+			selectedPatches as unknown as DmpPatchList,
 			this.originalContent,
 		);
 

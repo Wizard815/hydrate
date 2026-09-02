@@ -1,5 +1,5 @@
 import { App, MarkdownView, TFile } from 'obsidian';
-import { diff_match_patch } from 'diff-match-patch';
+import diff_match_patch from 'diff-match-patch';
 import {
   PendingChange,
   ReviewSession,
@@ -15,7 +15,6 @@ import {
 export class InlineChangeManager {
   private app: App;
   private session: ReviewSession | null = null;
-  // @ts-ignore - diff_match_patch typing issue
   private dmp: diff_match_patch;
   private eventCallbacks: ReviewEventCallback[] = [];
 
