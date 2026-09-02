@@ -10,11 +10,20 @@ import {
   createInlineReviewExtension,
   setReviewChanges,
   clearReviewChanges,
-  setChangesEffect,
 } from './ChangeDecorationPlugin';
 import { ReviewToolbar, createReviewToolbar } from './ReviewToolbar';
-import { ReviewResult, PendingChange } from './types';
+import { ReviewResult, HydrateChangeEventDetail } from './types';
 import { DiffReviewResult } from '../DiffReviewModal';
+import { devLog } from '../../utils/logger';
+
+/**
+ * Obsidian's Editor wraps a CM6 EditorView on `.cm`, but does not declare it
+ * in its public types. This is the documented escape hatch used by CM6-aware
+ * community plugins.
+ */
+interface EditorWithCm {
+  cm?: EditorView;
+}
 
 /**
  * Controller that orchestrates the inline review experience.
@@ -85,7 +94,10 @@ export class InlineReviewController {
     if (reactLeaf) {
       // File is in ReactView - switch to markdown in the same leaf
       this.switchedFromReactView = true;
-      this.reactViewKey = (reactLeaf.getViewState().state as any)?.viewKey || null;
+      const reactState = reactLeaf.getViewState().state as
+        | { viewKey?: string }
+        | undefined;
+      this.reactViewKey = reactState?.viewKey ?? null;
 
       // Set flag to prevent handleLayoutChange from switching back
       this.plugin.isInlineReviewActive = true;
@@ -113,7 +125,7 @@ export class InlineReviewController {
     }
 
     // Wait a tick for the view to initialize
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => window.setTimeout(resolve, 50));
 
     const markdownView = leaf.view as MarkdownView;
     if (!markdownView || markdownView.getViewType() !== 'markdown') {
@@ -164,7 +176,11 @@ export class InlineReviewController {
     this.toolbar = createReviewToolbar(markdownView, {
       onAcceptAll: () => this.handleAcceptAll(),
       onRejectAll: () => this.handleRejectAll(),
-      onDone: () => this.handleDone(),
+      onDone: () => {
+        this.handleDone().catch((error: unknown) => {
+          devLog.error('Failed to finish inline review', error);
+        });
+      },
       onJumpToNext: () => this.jumpToNextChange(),
     });
     this.toolbar.updateCount(this.manager.getRemainingCount());
@@ -215,14 +231,15 @@ export class InlineReviewController {
     if (!editor) return null;
 
     // The CM6 EditorView is available on the editor object
-    // @ts-ignore - Obsidian doesn't expose this in types
-    return (editor as any).cm as EditorView | undefined ?? null;
+    return (editor as unknown as EditorWithCm).cm ?? null;
   }
 
   /**
    * Handle hover widget accept event
    */
-  private handleChangeAccepted = (event: CustomEvent) => {
+  private handleChangeAccepted = (
+    event: CustomEvent<HydrateChangeEventDetail>,
+  ) => {
     const { changeId } = event.detail;
     this.manager.acceptChange(changeId);
   };
@@ -230,7 +247,9 @@ export class InlineReviewController {
   /**
    * Handle hover widget reject event
    */
-  private handleChangeRejected = (event: CustomEvent) => {
+  private handleChangeRejected = (
+    event: CustomEvent<HydrateChangeEventDetail>,
+  ) => {
     const { changeId } = event.detail;
     this.manager.rejectChange(changeId);
   };
@@ -421,7 +440,9 @@ export class InlineReviewController {
    */
   public destroy(): void {
     if (this.isActive()) {
-      this.cancel();
+      this.cancel().catch((error: unknown) => {
+        devLog.error('Failed to cancel inline review during destroy', error);
+      });
     }
     this.cleanupOrphanedToolbars();
   }

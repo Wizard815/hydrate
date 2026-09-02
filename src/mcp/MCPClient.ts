@@ -4,6 +4,7 @@ import {
 	StdioTransport,
 	WebSocketTransport,
 } from "./MCPTransport";
+import { getErrorMessage } from "../utils/errors";
 
 /**
  * MCP Protocol message types
@@ -59,7 +60,8 @@ export class MCPClient extends EventEmitter {
 		{
 			resolve: (value: unknown) => void;
 			reject: (error: Error) => void;
-			timeout: NodeJS.Timeout;
+			// window.setTimeout returns a number, not a NodeJS.Timeout.
+			timeout: number;
 		}
 	>();
 	private requestTimeout = 30000; // 30 seconds
@@ -121,7 +123,9 @@ export class MCPClient extends EventEmitter {
 			await this.notify("initialized", {});
 		} catch (error) {
 			await this.disconnect();
-			throw new Error(`MCP initialization failed: ${error.message}`);
+			throw new Error(
+				`MCP initialization failed: ${getErrorMessage(error)}`,
+			);
 		}
 	}
 
@@ -148,7 +152,7 @@ export class MCPClient extends EventEmitter {
 
 		return new Promise((resolve, reject) => {
 			// Set up timeout
-			const timeout = setTimeout(() => {
+			const timeout = window.setTimeout(() => {
 				this.pendingRequests.delete(id);
 				reject(new Error(`Request timeout: ${method}`));
 			}, this.requestTimeout);
@@ -159,7 +163,7 @@ export class MCPClient extends EventEmitter {
 			// Send the request
 			this.transport.send(message).catch((error) => {
 				this.pendingRequests.delete(id);
-				clearTimeout(timeout);
+				window.clearTimeout(timeout);
 				reject(
 					error instanceof Error ? error : new Error(String(error)),
 				);
@@ -233,7 +237,7 @@ export class MCPClient extends EventEmitter {
 		}
 
 		this.pendingRequests.delete(response.id);
-		clearTimeout(pending.timeout);
+		window.clearTimeout(pending.timeout);
 
 		if (response.error) {
 			const error = new Error(response.error.message) as Error & {
@@ -267,7 +271,7 @@ export class MCPClient extends EventEmitter {
 
 	private cleanupPendingRequests(): void {
 		for (const [, pending] of this.pendingRequests) {
-			clearTimeout(pending.timeout);
+			window.clearTimeout(pending.timeout);
 			pending.reject(new Error("Connection closed"));
 		}
 		this.pendingRequests.clear();

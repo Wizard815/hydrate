@@ -1,14 +1,18 @@
-const path = require("path"); // Use require for CJS config file
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import tailwindcssPostcss from "@tailwindcss/postcss";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+export default {
 	// Restore content path for scanning
 	content: [path.resolve(__dirname, "./src/components/**/*.{ts,tsx}")],
 	theme: {
 		extend: {},
 	},
 	// Restore PostCSS plugin
-	plugins: [require("@tailwindcss/postcss")],
+	plugins: [tailwindcssPostcss],
 	corePlugins: {
 		// Disable preflight to avoid conflicts with Obsidian base styles.
 		preflight: false,

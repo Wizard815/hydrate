@@ -1,5 +1,5 @@
 // src/components/HydrateView/imageUtils.ts
-import { App, normalizePath, TFile } from "obsidian";
+import { App, normalizePath } from "obsidian";
 import { ImageAttachment, StoredImageAttachment, ChatImage, isStoredImage } from "../../types";
 import { devLog } from "../../utils/logger";
 

@@ -37,12 +37,12 @@ export class ChatHistoryModal extends FuzzySuggestModal<ChatHistory> {
 		const chat = item.item;
 
 		// Create container for the suggestion content
-		const contentContainer = el.createEl("div", {
+		const contentContainer = el.createDiv({
 			cls: "hydrate-suggestion-content",
 		});
 
 		// Main title
-		contentContainer.createEl("div", {
+		contentContainer.createDiv({
 			text: chat.title,
 			cls: "hydrate-suggestion-title",
 		});

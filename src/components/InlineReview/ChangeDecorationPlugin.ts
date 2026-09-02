@@ -36,7 +36,7 @@ class AdditionWidget extends WidgetType {
   }
 
   toDOM(): HTMLElement {
-    const span = document.createElement('span');
+    const span = createSpan();
     span.className = 'hydrate-review-addition';
     span.textContent = this.text;
     span.dataset.changeId = this.changeId;
@@ -326,15 +326,15 @@ export const changeHoverPlugin = ViewPlugin.fromClass(
       this.hoveredChangeId = changeId;
 
       // Create the widget
-      this.hoverWidget = document.createElement('div');
+      this.hoverWidget = createDiv();
       this.hoverWidget.className = 'hydrate-review-hover-widget';
       if (isSelected) {
         this.hoverWidget.classList.add('hydrate-review-widget-selected');
       }
 
-      const acceptBtn = document.createElement('button');
+      const acceptBtn = createEl('button');
       acceptBtn.className = 'hydrate-review-btn hydrate-review-accept';
-      acceptBtn.innerHTML = '&#x2713;'; // Checkmark
+      acceptBtn.setText('✓'); // Checkmark
       acceptBtn.title = 'Accept this change';
       acceptBtn.onclick = (e) => {
         e.preventDefault();
@@ -342,9 +342,9 @@ export const changeHoverPlugin = ViewPlugin.fromClass(
         this.acceptChange(changeId);
       };
 
-      const rejectBtn = document.createElement('button');
+      const rejectBtn = createEl('button');
       rejectBtn.className = 'hydrate-review-btn hydrate-review-reject';
-      rejectBtn.innerHTML = '&#x2717;'; // X mark
+      rejectBtn.setText('✗'); // X mark
       rejectBtn.title = 'Reject this change';
       rejectBtn.onclick = (e) => {
         e.preventDefault();
@@ -359,9 +359,10 @@ export const changeHoverPlugin = ViewPlugin.fromClass(
       const rect = changeEl.getBoundingClientRect();
       const editorRect = this.view.dom.getBoundingClientRect();
 
-      this.hoverWidget.style.position = 'absolute';
-      this.hoverWidget.style.left = `${rect.left - editorRect.left}px`;
-      this.hoverWidget.style.top = `${rect.bottom - editorRect.top + 2}px`;
+      this.hoverWidget.setCssProps({
+        '--hydrate-widget-left': `${rect.left - editorRect.left}px`,
+        '--hydrate-widget-top': `${rect.bottom - editorRect.top + 2}px`,
+      });
 
       this.view.dom.appendChild(this.hoverWidget);
 

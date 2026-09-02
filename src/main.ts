@@ -37,6 +37,7 @@ import { MCPServerManager, MCPConfigStorage } from "./mcp/MCPServerManager";
 import { ViewLoader } from "./ViewLoader";
 import { MCPServerConfig, MCPServerStatus } from "./mcp/MCPServerConfig";
 import { devLog } from "./utils/logger";
+import { getErrorMessage } from "./utils/errors";
 import { createInlineReviewExtension } from "./components/InlineReview";
 import { ViewPickerModal } from "./components/ViewPickerModal";
 
@@ -416,23 +417,29 @@ export default class HydratePlugin extends Plugin {
 				new ViewPickerModal(
 					this.app,
 					views,
-					async (viewName: string) => {
-						const file = this.app.workspace.getActiveFile();
-						if (!file) {
-							new Notice("No active file.");
-							return;
-						}
+					(viewName: string) => {
+						void (async () => {
+							const file = this.app.workspace.getActiveFile();
+							if (!file) {
+								new Notice("No active file.");
+								return;
+							}
 
-						await this.app.fileManager.processFrontMatter(
-							file,
-							(frontmatter) => {
-								frontmatter["hydrate-plugin"] = viewName;
-							},
-						);
+							await this.app.fileManager.processFrontMatter(
+								file,
+								(frontmatter: Record<string, unknown>) => {
+									frontmatter["hydrate-plugin"] = viewName;
+								},
+							);
 
-						new Notice(
-							`Applied view "${viewName}" to ${file.basename}.`,
-						);
+							new Notice(
+								`Applied view "${viewName}" to ${file.basename}.`,
+							);
+						})().catch((error: unknown) => {
+							new Notice(
+								`Failed to apply view: ${getErrorMessage(error)}`,
+							);
+						});
 					},
 				).open();
 

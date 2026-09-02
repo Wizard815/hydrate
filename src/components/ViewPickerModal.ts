@@ -1,4 +1,4 @@
-import { App, FuzzySuggestModal, FuzzyMatch, TFile } from "obsidian";
+import { App, FuzzySuggestModal, FuzzyMatch } from "obsidian";
 
 interface ViewOption {
 	name: string;
@@ -30,7 +30,7 @@ export class ViewPickerModal extends FuzzySuggestModal<ViewOption> {
 
 	renderSuggestion(item: FuzzyMatch<ViewOption>, el: HTMLElement): void {
 		const view = item.item;
-		el.createEl("div", {
+		el.createDiv({
 			text: view.name,
 			cls: "hydrate-suggestion-title",
 		});

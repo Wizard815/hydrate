@@ -10,6 +10,17 @@ import { httpRequest } from "./utils/httpClient";
 import { LocalIndex, QueryResult as VectraQueryResult } from "vectra";
 import { devLog } from "./utils/logger";
 
+/** OpenAI-compatible embeddings response. */
+interface EmbeddingItem {
+	embedding: number[];
+}
+
+interface EmbeddingsResponse {
+	data?: EmbeddingItem[];
+	error?: { message?: string };
+	detail?: string;
+}
+
 // Manually define the Item interface based on Vectra's expected structure
 interface VectraItem<M extends Record<string, unknown>> {
 	vector: number[];
@@ -248,8 +259,7 @@ async function embedTextsViaRemoteApi(
 		});
 
 		// --- Process Response ---
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const responseData = (await response.json()) as any;
+		const responseData = (await response.json()) as EmbeddingsResponse;
 
 		if (!response.ok) {
 			const errorDetail =
@@ -265,11 +275,8 @@ async function embedTextsViaRemoteApi(
 			throw new Error(errorMsg);
 		}
 
-		if (
-			!responseData ||
-			!responseData.data ||
-			!Array.isArray(responseData.data)
-		) {
+		const items = responseData.data;
+		if (!items || !Array.isArray(items)) {
 			devLog.error(
 				"[embedTextsViaRemoteApi] Invalid response structure:",
 				responseData,
@@ -280,9 +287,9 @@ async function embedTextsViaRemoteApi(
 		}
 
 		// Ensure the number of embeddings matches the number of valid inputs sent
-		if (responseData.data.length !== validTexts.length) {
+		if (items.length !== validTexts.length) {
 			devLog.warn(
-				`[embedTextsViaRemoteApi] Mismatch: ${validTexts.length} texts sent, ${responseData.data.length} embeddings received.`,
+				`[embedTextsViaRemoteApi] Mismatch: ${validTexts.length} texts sent, ${items.length} embeddings received.`,
 			);
 			// Decide how to handle: throw error, return partial, or try to map. For now, throwing if mismatch.
 			// If the API guarantees order and length, this check is crucial.
@@ -293,38 +300,20 @@ async function embedTextsViaRemoteApi(
 		}
 
 		// Extract embeddings, expecting OpenAI format: { data: [ { embedding: [...] }, ... ] }
-		const embeddings = responseData.data
-			.map((item: unknown, index: number) => {
-				if (
-					item &&
-					typeof item === "object" &&
-					"embedding" in item &&
-					Array.isArray((item as Record<string, unknown>).embedding)
-				) {
-					return (item as Record<string, unknown>).embedding;
-				} else {
-					devLog.error(
-						`[embedTextsViaRemoteApi] Invalid embedding item structure at index ${index}:`,
-						item,
-					);
-					// Throw an error if any item is invalid, preventing partial results
-					throw new Error(
-						`Invalid embedding item received at index ${index}.`,
-					);
-				}
-			})
-			// Filter out any potential nulls/undefined if map logic were different, though the throw prevents this now
-			.filter((e: number[] | null): e is number[] => e !== null);
-
-		// Final check if filtering/mapping resulted in unexpected length
-		if (embeddings.length !== responseData.data.length) {
-			devLog.error(
-				"[embedTextsViaRemoteApi] Error processing embedding items from response data.",
-			);
-			throw new Error(
-				"Failed to process all embedding items from API response.",
-			);
-		}
+		// The map throws on any malformed item, so there is nothing to filter
+		// afterwards and the result length always matches `items`.
+		const embeddings = items.map((item, index) => {
+			if (!Array.isArray(item?.embedding)) {
+				devLog.error(
+					`[embedTextsViaRemoteApi] Invalid embedding item structure at index ${index}:`,
+					item,
+				);
+				throw new Error(
+					`Invalid embedding item received at index ${index}.`,
+				);
+			}
+			return item.embedding;
+		});
 
 		return embeddings;
 	} catch (error) {

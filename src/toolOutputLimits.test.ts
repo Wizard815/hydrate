@@ -47,7 +47,7 @@ describe("capToolResult", () => {
 	});
 
 	it("falls back to String() for unstringifiable values", () => {
-		const circular: any = { a: 1 };
+		const circular: Record<string, unknown> = { a: 1 };
 		circular.self = circular;
 		const out = capToolResult(circular) as string;
 		expect(typeof out).toBe("string");

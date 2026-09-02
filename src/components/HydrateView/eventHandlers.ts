@@ -456,7 +456,10 @@ export const handleSend = async (view: HydrateView): Promise<void> => {
 			const file = view.app.vault.getAbstractFileByPath(filePath);
 			if (file instanceof TFile) {
 				const fileCache = view.app.metadataCache.getFileCache(file);
-				const ruleTags = fileCache?.frontmatter?.["hydrate-rules"];
+				// Frontmatter values are untyped; this key may be a string, a
+				// list of strings, or absent entirely.
+				const ruleTags: unknown =
+					fileCache?.frontmatter?.["hydrate-rules"];
 
 				let currentFileRuleIds: string[] = [];
 				if (typeof ruleTags === "string") {
@@ -775,7 +778,7 @@ export const handleSuggestionSelect = (
 	const newCursorPos =
 		view.triggerStartIndex + selectedEntry.slashCommandTrigger.length + 1;
 	view.textInput.focus();
-	requestAnimationFrame(() => {
+	window.requestAnimationFrame(() => {
 		view.textInput.setSelectionRange(newCursorPos, newCursorPos);
 	});
 };
@@ -831,7 +834,7 @@ export const handleInputChange = (view: HydrateView): void => {
 					// Position cursor
 					const newCursorPos = beforeTrigger.length;
 					view.textInput.focus();
-					requestAnimationFrame(() => {
+					window.requestAnimationFrame(() => {
 						view.textInput.setSelectionRange(
 							newCursorPos,
 							newCursorPos,
@@ -887,7 +890,7 @@ export const handleInputChange = (view: HydrateView): void => {
 							(selectedEntry.slashCommandTrigger?.length || 0) +
 							1;
 						view.textInput.focus();
-						requestAnimationFrame(() => {
+						window.requestAnimationFrame(() => {
 							view.textInput.setSelectionRange(
 								newCursorPos,
 								newCursorPos,

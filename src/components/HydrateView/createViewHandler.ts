@@ -1,9 +1,16 @@
 // src/components/HydrateView/createViewHandler.ts
-import { TFile, MarkdownView } from "obsidian";
+import {
+	TFile,
+	MarkdownView,
+	requestUrl,
+	type RequestUrlResponse,
+} from "obsidian";
 import type { HydrateView } from "./hydrateView";
 import { addMessageToChat, setLoadingState } from "./domUtils";
 import { devLog } from "../../utils/logger";
 import { REACT_HOST_VIEW_TYPE } from "../../main";
+import { ReactViewHost } from "../../ReactViewHost";
+import { type ApiErrorBody } from "../../settings/licenseTypes";
 
 interface GenerateViewResponse {
 	content: string;
@@ -12,6 +19,18 @@ interface GenerateViewResponse {
 interface ScaffoldResponse {
 	viewName: string;
 	sampleMarkdown: string;
+}
+
+/**
+ * requestUrl exposes `.json` as a getter that throws when the body is not
+ * JSON (a proxy's HTML error page, for example). Read it defensively.
+ */
+function readJson<T>(res: RequestUrlResponse): T | undefined {
+	try {
+		return res.json as T;
+	} catch {
+		return undefined;
+	}
 }
 
 // System prompt for scaffold generation (view name + sample markdown)
@@ -314,9 +333,11 @@ async function generateScaffold(
 Remember to return ONLY valid JSON with viewName and sampleMarkdown fields.`;
 
 	try {
-		const fetchResponse = await fetch(`${backendUrl}/generate-view`, {
+		const fetchResponse = await requestUrl({
+			url: `${backendUrl}/generate-view`,
 			method: "POST",
 			headers,
+			throw: false,
 			body: JSON.stringify({
 				system_prompt: SCAFFOLD_GENERATION_SYSTEM_PROMPT,
 				user_prompt: userPrompt,
@@ -324,12 +345,14 @@ Remember to return ONLY valid JSON with viewName and sampleMarkdown fields.`;
 			}),
 		});
 
-		if (!fetchResponse.ok) {
-			const errorData = await fetchResponse.json().catch(() => ({}));
-			throw new Error(errorData.detail || `Server error: ${fetchResponse.status}`);
+		if (fetchResponse.status < 200 || fetchResponse.status >= 300) {
+			const errorData = readJson<ApiErrorBody>(fetchResponse);
+			throw new Error(
+				errorData?.detail ?? `Server error: ${fetchResponse.status}`,
+			);
 		}
 
-		const response: GenerateViewResponse = await fetchResponse.json();
+		const response = readJson<GenerateViewResponse>(fetchResponse);
 
 		if (!response || !response.content) {
 			throw new Error("No response from scaffold generation");
@@ -344,7 +367,7 @@ Remember to return ONLY valid JSON with viewName and sampleMarkdown fields.`;
 			.replace(/\n?```$/i, "")
 			.trim();
 
-		const scaffold: ScaffoldResponse = JSON.parse(jsonContent);
+		const scaffold = JSON.parse(jsonContent) as ScaffoldResponse;
 
 		if (!scaffold.viewName || !scaffold.sampleMarkdown) {
 			throw new Error("Invalid scaffold response structure");
@@ -411,13 +434,15 @@ async function switchFileToReactView(
 					refreshToken: refreshToken,
 				},
 				active: leaf === app.workspace.getLeaf(),
+			}).catch((error: unknown) => {
+				devLog.error("Failed to set view state", error);
 			});
 		}
 
 		// Handle ReactViewHost - force remount by re-setting state with new refreshToken
 		if (
-			leafView.getViewType() === REACT_HOST_VIEW_TYPE &&
-			(leafView as any).currentFilePath === filePath
+			leafView instanceof ReactViewHost &&
+			leafView.currentFilePath === filePath
 		) {
 			devLog.debug(`Refreshing React view for ${filePath}`);
 			leaf.setViewState({
@@ -428,6 +453,8 @@ async function switchFileToReactView(
 					refreshToken: refreshToken,
 				},
 				active: leaf === app.workspace.getLeaf(),
+			}).catch((error: unknown) => {
+				devLog.error("Failed to set view state", error);
 			});
 		}
 	});
@@ -623,9 +650,11 @@ Return ONLY the JSX code, starting with "import React from 'react';".`;
 		if (settings.anthropicApiKey) headers["X-Anthropic-Key"] = settings.anthropicApiKey;
 		if (settings.googleApiKey) headers["X-Gemini-Key"] = settings.googleApiKey;
 
-		const fetchResponse = await fetch(`${backendUrl}/generate-view`, {
+		const fetchResponse = await requestUrl({
+			url: `${backendUrl}/generate-view`,
 			method: "POST",
 			headers,
+			throw: false,
 			body: JSON.stringify({
 				system_prompt: VIEW_GENERATION_SYSTEM_PROMPT,
 				user_prompt: userPrompt,
@@ -633,14 +662,14 @@ Return ONLY the JSX code, starting with "import React from 'react';".`;
 			}),
 		});
 
-		if (!fetchResponse.ok) {
-			const errorData = await fetchResponse.json().catch(() => ({}));
+		if (fetchResponse.status < 200 || fetchResponse.status >= 300) {
+			const errorData = readJson<ApiErrorBody>(fetchResponse);
 			throw new Error(
-				errorData.detail || `Server error: ${fetchResponse.status}`
+				errorData?.detail ?? `Server error: ${fetchResponse.status}`
 			);
 		}
 
-		const response: GenerateViewResponse = await fetchResponse.json();
+		const response = readJson<GenerateViewResponse>(fetchResponse);
 
 		if (!response || !response.content) {
 			throw new Error("No response from view generation");
@@ -851,9 +880,11 @@ Update the component according to the user's feedback. Return ONLY the complete 
 		if (settings.anthropicApiKey) headers["X-Anthropic-Key"] = settings.anthropicApiKey;
 		if (settings.googleApiKey) headers["X-Gemini-Key"] = settings.googleApiKey;
 
-		const fetchResponse = await fetch(`${backendUrl}/generate-view`, {
+		const fetchResponse = await requestUrl({
+			url: `${backendUrl}/generate-view`,
 			method: "POST",
 			headers,
+			throw: false,
 			body: JSON.stringify({
 				system_prompt: VIEW_GENERATION_SYSTEM_PROMPT,
 				user_prompt: userPrompt,
@@ -861,14 +892,14 @@ Update the component according to the user's feedback. Return ONLY the complete 
 			}),
 		});
 
-		if (!fetchResponse.ok) {
-			const errorData = await fetchResponse.json().catch(() => ({}));
+		if (fetchResponse.status < 200 || fetchResponse.status >= 300) {
+			const errorData = readJson<ApiErrorBody>(fetchResponse);
 			throw new Error(
-				errorData.detail || `Server error: ${fetchResponse.status}`
+				errorData?.detail ?? `Server error: ${fetchResponse.status}`
 			);
 		}
 
-		const response: GenerateViewResponse = await fetchResponse.json();
+		const response = readJson<GenerateViewResponse>(fetchResponse);
 
 		if (!response || !response.content) {
 			throw new Error("No response from view generation");

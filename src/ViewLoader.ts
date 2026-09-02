@@ -1,11 +1,21 @@
 // src/ViewLoader.ts
 import * as obsidian from "obsidian";
-import { App, TFile, TFolder } from "obsidian";
+import { App } from "obsidian";
 import { transform } from "sucrase";
 import * as React from "react";
 import { devLog } from "./utils/logger";
 import { registerReactView } from "./main";
 import { ReactViewProps } from "./types";
+
+/**
+ * Signature of the module wrapper produced from a user-authored view file.
+ * The transformed code assigns its component to `exports.default`.
+ */
+type ViewModuleFactory = (
+	exports: { default?: React.ComponentType<ReactViewProps> },
+	require: (moduleName: string) => unknown,
+	react: typeof React
+) => void;
 
 // Views directory relative to vault root (visible in sidebar for easy access)
 const VIEWS_DIR = "hydrate-chats/views";
@@ -139,14 +149,15 @@ export class ViewLoader {
 				throw new Error(`Unknown module: ${moduleName}`);
 			};
 
-			// Evaluate the transformed code
-			// The component should export default
+			// Evaluate the transformed code.
+			// The component should export default.
+			// eslint-disable-next-line @typescript-eslint/no-implied-eval -- user-authored views are compiled at runtime; there is no non-eval way to do this. Exception requested from the Obsidian review team, see docs/obsidian-review-exception-request.md
 			const moduleFunction = new Function(
 				"exports",
 				"require",
 				"React",
 				result.code
-			);
+			) as ViewModuleFactory;
 			moduleFunction(exports, require, React);
 
 			if (typeof exports.default === "function") {

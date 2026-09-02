@@ -6,6 +6,12 @@ import {
 	TextAreaComponent,
 } from "obsidian";
 import { MCPServerConfig } from "../mcp/MCPServerConfig";
+import { getErrorMessage } from "../utils/errors";
+
+/** Shape of a Claude-Desktop-style mcpServers config blob. */
+interface McpServersFile {
+	mcpServers?: Record<string, Record<string, unknown>>;
+}
 
 export class MCPServersConfigModal extends Modal {
 	private onSave: (configs: MCPServerConfig[]) => void;
@@ -159,7 +165,7 @@ export class MCPServersConfigModal extends Modal {
 
 	private parseJsonToConfigs(jsonStr: string): MCPServerConfig[] {
 		try {
-			const parsed = JSON.parse(jsonStr);
+			const parsed = JSON.parse(jsonStr) as McpServersFile;
 
 			if (!parsed.mcpServers || typeof parsed.mcpServers !== "object") {
 				throw new Error("JSON must contain 'mcpServers' object");
@@ -168,10 +174,7 @@ export class MCPServersConfigModal extends Modal {
 			const configs: MCPServerConfig[] = [];
 
 			Object.entries(parsed.mcpServers).forEach(
-				([serverId, serverConfig]: [
-					string,
-					Record<string, unknown>,
-				]) => {
+				([serverId, serverConfig]) => {
 					const config: MCPServerConfig = {
 						id: serverId,
 						name: serverId,
@@ -225,7 +228,9 @@ export class MCPServersConfigModal extends Modal {
 
 			return configs;
 		} catch (error) {
-			throw new Error(`Invalid JSON configuration: ${error.message}`);
+			throw new Error(
+				`Invalid JSON configuration: ${getErrorMessage(error)}`,
+			);
 		}
 	}
 
@@ -269,7 +274,7 @@ export class MCPServersConfigModal extends Modal {
 			);
 			return true;
 		} catch (error) {
-			this.showError(error.message);
+			this.showError(getErrorMessage(error));
 			return false;
 		}
 	}
@@ -286,6 +291,6 @@ export class MCPServersConfigModal extends Modal {
 		errorEl.addClass("hydrate-mcp-error");
 		errorEl.textContent = message;
 
-		setTimeout(() => errorEl.remove(), 5000);
+		window.setTimeout(() => errorEl.remove(), 5000);
 	}
 }

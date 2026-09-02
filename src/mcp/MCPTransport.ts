@@ -2,6 +2,20 @@ import { ChildProcess, spawn } from "child_process";
 import { EventEmitter } from "events";
 
 /**
+ * A JSON-RPC frame off the wire. Fields are unvalidated -- the MCP SDK does
+ * the real schema check downstream; this type exists so the transport stops
+ * passing `any` through the event emitter.
+ */
+export interface JsonRpcFrame {
+	jsonrpc?: string;
+	id?: string | number;
+	method?: string;
+	params?: unknown;
+	result?: unknown;
+	error?: { code?: number; message?: string };
+}
+
+/**
  * Base interface for MCP transport mechanisms
  */
 export interface MCPTransport extends EventEmitter {
@@ -50,29 +64,29 @@ export class StdioTransport extends EventEmitter implements MCPTransport {
 			});
 
 			// Handle stdout messages
-			this.process.stdout?.on("data", (data) => {
+			this.process.stdout?.on("data", (data: Buffer) => {
 				this.handleIncomingData(data.toString());
 			});
 
 			// Handle stderr for debugging
-			this.process.stderr?.on("data", (data) => {
+			this.process.stderr?.on("data", (data: Buffer) => {
 				this.emit("stderr", data.toString());
 			});
 
 			// Wait a bit for the process to start
 			await new Promise((resolve, reject) => {
-				const timeout = setTimeout(() => {
+				const timeout = window.setTimeout(() => {
 					reject(new Error("Connection timeout"));
 				}, 5000);
 
 				this.process?.on("spawn", () => {
-					clearTimeout(timeout);
+					window.clearTimeout(timeout);
 					this.connected = true;
 					resolve(void 0);
 				});
 
 				this.process?.on("error", (error) => {
-					clearTimeout(timeout);
+					window.clearTimeout(timeout);
 					reject(error);
 				});
 			});
@@ -103,7 +117,7 @@ export class StdioTransport extends EventEmitter implements MCPTransport {
 			// Try graceful shutdown first
 			processRef?.kill("SIGTERM");
 
-			const timeout = setTimeout(() => {
+			const timeout = window.setTimeout(() => {
 				// Force kill if graceful shutdown fails
 				if (processRef && !processRef.killed) {
 					processRef.kill("SIGKILL");
@@ -112,7 +126,7 @@ export class StdioTransport extends EventEmitter implements MCPTransport {
 			}, 3000);
 
 			processRef?.on("exit", () => {
-				clearTimeout(timeout);
+				window.clearTimeout(timeout);
 				cleanup();
 			});
 		});
@@ -150,7 +164,7 @@ export class StdioTransport extends EventEmitter implements MCPTransport {
 		for (const line of lines) {
 			if (line.trim()) {
 				try {
-					const message = JSON.parse(line);
+					const message = JSON.parse(line) as JsonRpcFrame;
 					this.emit("message", message);
 				} catch {
 					this.emit(
@@ -190,14 +204,17 @@ export class WebSocketTransport extends EventEmitter implements MCPTransport {
 				};
 
 				this.ws.onmessage = (event) => {
+					// MessageEvent#data is typed any; this transport only ever
+					// receives text frames.
+					const raw = event.data as string;
 					try {
-						const message = JSON.parse(event.data);
+						const message = JSON.parse(raw) as JsonRpcFrame;
 						this.emit("message", message);
 					} catch {
 						this.emit(
 							"error",
 							new Error(
-								`Failed to parse WebSocket message: ${event.data}`,
+								`Failed to parse WebSocket message: ${raw}`,
 							),
 						);
 					}

@@ -10,7 +10,10 @@ import HydratePlugin from "../main";
 
 // Mock the updateMarkdownContent prop
 // Make it return a resolved promise to allow .catch() in the component
-const mockUpdateMarkdownContent = vi.fn().mockResolvedValue(undefined);
+// Typed so `mock.calls[0][0]` narrows to string instead of any.
+const mockUpdateMarkdownContent = vi
+	.fn<(newContent: string) => Promise<boolean>>()
+	.mockResolvedValue(true);
 const mockSwitchToMarkdownView = vi.fn(); // Mock for switchToMarkdownView
 
 const defaultProps: ReactViewProps = {

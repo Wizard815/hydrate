@@ -50,7 +50,7 @@ export class SlashCommandModal extends FuzzySuggestModal<RegistryEntry> {
 
 	renderSuggestion(item: FuzzyMatch<RegistryEntry>, el: HTMLElement): void {
 		const entry = item.item;
-		el.createEl("div", {
+		el.createDiv({
 			text: entry.slashCommandTrigger || "",
 			cls: "hydrate-suggestion-title",
 		});

@@ -23,7 +23,9 @@ interface GeminiContentBlock {
  * Returns an object with thinking (optional) and text content.
  */
 export function parseAgentContent(
-	content: string | GeminiContentBlock[] | unknown
+	// Accepts a plain string, a GeminiContentBlock[], or anything else the
+	// backend might send; the body narrows each case in turn.
+	content: unknown
 ): { thinking: string | null; text: string } {
 	// Simple string content
 	if (typeof content === "string") {
@@ -51,8 +53,24 @@ export function parseAgentContent(
 		return { thinking, text: textParts.join("\n") };
 	}
 
-	// Fallback
-	return { thinking: null, text: String(content || "") };
+	// Fallback: an unrecognised shape. Render numbers and booleans directly
+	// and everything else as JSON, rather than letting String() produce
+	// "[object Object]".
+	let text = "";
+	if (
+		typeof content === "number" ||
+		typeof content === "boolean" ||
+		typeof content === "bigint"
+	) {
+		text = content.toString();
+	} else if (content != null) {
+		try {
+			text = JSON.stringify(content) ?? "";
+		} catch {
+			text = "";
+		}
+	}
+	return { thinking: null, text };
 }
 
 /**
@@ -126,24 +144,9 @@ export function addMessageToChat(
 		const imagesContainer = messageEl.createDiv({
 			cls: "hydrate-message-images",
 		});
-		imagesContainer.style.cssText = `
-			display: flex;
-			flex-wrap: wrap;
-			gap: 8px;
-			margin-bottom: 8px;
-		`;
 
 		images.forEach((img) => {
-			const imgEl = document.createElement("img");
-			imgEl.style.cssText = `
-				max-width: 200px;
-				max-height: 200px;
-				min-width: 60px;
-				min-height: 60px;
-				border-radius: 4px;
-				border: 1px solid var(--background-modifier-border);
-				background: var(--background-secondary);
-			`;
+			const imgEl = createEl("img", { cls: "hydrate-message-image" });
 
 			// Handle both base64 and vault-stored images
 			if (isStoredImage(img)) {
@@ -190,7 +193,7 @@ export function addMessageToChat(
 						setIcon(copyButton, "check");
 						copyButton.children[0]?.setAttribute("width", "14");
 						copyButton.children[0]?.setAttribute("height", "14");
-						setTimeout(() => {
+						window.setTimeout(() => {
 							setIcon(copyButton, "copy");
 							copyButton.children[0]?.setAttribute("width", "14");
 							copyButton.children[0]?.setAttribute("height", "14");
@@ -238,7 +241,7 @@ export function addMessageToChat(
 						copyButton.children[0]?.setAttribute("width", "14");
 						copyButton.children[0]?.setAttribute("height", "14");
 
-						setTimeout(() => {
+						window.setTimeout(() => {
 							// Revert back to copy icon
 							setIcon(copyButton, "copy");
 							copyButton.children[0]?.setAttribute("width", "14");
@@ -277,7 +280,7 @@ export function addMessageToChat(
 
 			let lastIndex = 0;
 			let match;
-			const fragment = document.createDocumentFragment();
+			const fragment = createFragment();
 
 			while ((match = commandRegex.exec(content)) !== null) {
 				if (match.index > lastIndex) {
@@ -287,7 +290,7 @@ export function addMessageToChat(
 						),
 					);
 				}
-				const strongEl = document.createElement("strong");
+				const strongEl = createEl("strong");
 				strongEl.addClass("hydrate-slash-command-display");
 				strongEl.textContent = match[0];
 				fragment.appendChild(strongEl);
@@ -307,7 +310,7 @@ export function addMessageToChat(
 		messageEl.createSpan({ text: content });
 	}
 
-	requestAnimationFrame(() => {
+	window.requestAnimationFrame(() => {
 		chatContainer.scrollTop = chatContainer.scrollHeight;
 	});
 
@@ -331,7 +334,7 @@ export function addMessageToChat(
 			// Refresh context suggestions after new messages (but not for system messages)
 			if (role === "user" || role === "agent") {
 				// Use setTimeout to avoid blocking the UI
-				setTimeout(() => {
+				window.setTimeout(() => {
 					void view.refreshContextSuggestions?.();
 				}, 1000);
 			}
@@ -411,7 +414,7 @@ export function createStreamingAgentMessage(view: HydrateView): {
 	let thinkingContent: HTMLElement | null = null;
 
 	const scrollToBottom = () => {
-		requestAnimationFrame(() => {
+		window.requestAnimationFrame(() => {
 			chatContainer.scrollTop = chatContainer.scrollHeight;
 		});
 	};
@@ -424,14 +427,14 @@ export function createStreamingAgentMessage(view: HydrateView): {
 
 	const renderThinking = (text: string) => {
 		if (!thinkingContent) {
-			const details = document.createElement("details");
+			const details = createEl("details");
 			details.className = "hydrate-thinking-section";
 			details.open = true;
-			const summary = document.createElement("summary");
+			const summary = createEl("summary");
 			summary.className = "hydrate-thinking-summary";
 			summary.textContent = "Model thinking...";
 			details.appendChild(summary);
-			thinkingContent = document.createElement("div");
+			thinkingContent = createDiv();
 			thinkingContent.className = "hydrate-thinking-content";
 			details.appendChild(thinkingContent);
 			el.insertBefore(details, textDiv);
@@ -480,7 +483,7 @@ export function createStreamingAgentMessage(view: HydrateView): {
 					setIcon(copyButton, "check");
 					copyButton.children[0]?.setAttribute("width", "14");
 					copyButton.children[0]?.setAttribute("height", "14");
-					setTimeout(() => {
+					window.setTimeout(() => {
 						setIcon(copyButton, "copy");
 						copyButton.children[0]?.setAttribute("width", "14");
 						copyButton.children[0]?.setAttribute("height", "14");
@@ -507,7 +510,7 @@ export function createStreamingAgentMessage(view: HydrateView): {
 			};
 			view.currentChatTurns.push(chatTurn);
 
-			setTimeout(() => {
+			window.setTimeout(() => {
 				void view.refreshContextSuggestions?.();
 			}, 1000);
 		}
@@ -617,10 +620,10 @@ export function setLoadingState(
 			const message = customMessage || "Agent is thinking";
 
 			// Create animated dots
-			loadingIndicator.createEl("span", {
+			loadingIndicator.createSpan({
 				text: message,
 			});
-			loadingIndicator.createEl("span", {
+			loadingIndicator.createSpan({
 				cls: "hydrate-loading-dots",
 				text: "...",
 			});
@@ -629,7 +632,7 @@ export function setLoadingState(
 
 			// Scroll to show the loading indicator
 			if (chatContainer) {
-				requestAnimationFrame(() => {
+				window.requestAnimationFrame(() => {
 					chatContainer.scrollTop = chatContainer.scrollHeight;
 				});
 			}
@@ -695,71 +698,35 @@ export const renderImagePreviews = (view: HydrateView): void => {
 		const inputSection = containerEl.querySelector(".hydrate-input-section");
 		if (!inputSection) return;
 
-		imagePreviews = document.createElement("div");
+		imagePreviews = createDiv();
 		imagePreviews.className = "hydrate-image-previews";
-		imagePreviews.style.cssText = `
-			display: flex;
-			flex-wrap: wrap;
-			gap: 8px;
-			padding: 8px;
-			border-bottom: 1px solid var(--background-modifier-border);
-		`;
 		inputSection.insertBefore(imagePreviews, inputSection.firstChild);
 	}
 
 	// Clear existing previews
-	imagePreviews.innerHTML = "";
+	imagePreviews.empty();
 
 	// Hide if no images
+	imagePreviews.toggleClass(
+		"hydrate-hidden",
+		view.attachedImages.length === 0,
+	);
 	if (view.attachedImages.length === 0) {
-		imagePreviews.style.display = "none";
 		return;
 	}
 
-	imagePreviews.style.display = "flex";
-
 	// Create preview for each image
 	view.attachedImages.forEach((img, index) => {
-		const preview = document.createElement("div");
+		const preview = createDiv();
 		preview.className = "hydrate-image-preview";
-		preview.style.cssText = `
-			position: relative;
-			width: 60px;
-			height: 60px;
-			border-radius: 4px;
-			overflow: hidden;
-			border: 1px solid var(--background-modifier-border);
-		`;
 
-		const imgEl = document.createElement("img");
+		const imgEl = createEl("img", { cls: "hydrate-image-preview-img" });
 		imgEl.src = `data:${img.mimeType};base64,${img.data}`;
-		imgEl.style.cssText = `
-			width: 100%;
-			height: 100%;
-			object-fit: cover;
-		`;
 		imgEl.alt = img.filename || `Image ${index + 1}`;
 
-		const removeBtn = document.createElement("button");
+		const removeBtn = createEl("button");
 		removeBtn.className = "hydrate-image-remove";
-		removeBtn.innerHTML = "×";
-		removeBtn.style.cssText = `
-			position: absolute;
-			top: 2px;
-			right: 2px;
-			width: 18px;
-			height: 18px;
-			border-radius: 50%;
-			border: none;
-			background: var(--background-modifier-error);
-			color: white;
-			cursor: pointer;
-			font-size: 12px;
-			line-height: 1;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-		`;
+		removeBtn.setText("×");
 		removeBtn.onclick = (e) => {
 			e.stopPropagation();
 			view.attachedImages.splice(index, 1);
@@ -957,7 +924,7 @@ export function selectNoteSearchResult(view: HydrateView, index: number): void {
 	// Position cursor
 	const newCursorPos = beforeTrigger.length;
 	view.textInput.focus();
-	requestAnimationFrame(() => {
+	window.requestAnimationFrame(() => {
 		view.textInput.setSelectionRange(newCursorPos, newCursorPos);
 	});
 }

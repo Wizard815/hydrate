@@ -1,43 +1,44 @@
-# Obsidian ESLint Plugin Setup
+# ESLint setup
 
-## Installation Summary
+This repo lints against the official Obsidian rules used by the community
+directory's automated review.
 
-The official Obsidian ESLint plugin has been successfully installed and configured.
+- Package: `eslint-plugin-obsidianmd` (pinned exactly — the config shape has
+  changed between minor versions before).
+- Config: `eslint.config.mjs` spreads `obsidianmd.configs.recommended`, which is
+  a **flat-config array**, at the top level. Do not spread it into a `rules`
+  object — that silently disables every Obsidian rule.
+- Type-aware rules need `parserOptions.projectService`, which is set in the
+  final block of the config.
 
-### Packages Installed
+## Commands
 
-- `eslint@^9.0.0` - ESLint v9 (required by Obsidian plugin)
-- `@typescript-eslint/eslint-plugin@^8.0.0` - TypeScript ESLint plugin
-- `@typescript-eslint/parser@^8.0.0` - TypeScript parser for ESLint
-- `typescript-eslint@^8.0.0` - TypeScript ESLint utilities
-- `eslint-plugin-obsidianmd` (from GitHub) - Official Obsidian plugin
+- `npm run lint` — report
+- `npm run lint:fix` — apply auto-fixes
 
-### Configuration
+## Rules you cannot disable
 
-The configuration is in `eslint.config.mjs` (ESLint v9 flat config format).
+`eslint-comments/no-restricted-disable` blocks `eslint-disable` for
+`obsidianmd/*`, `no-console`, `no-restricted-globals`,
+`@typescript-eslint/no-restricted-imports`, `no-alert`,
+`@typescript-eslint/no-deprecated`, `@typescript-eslint/no-explicit-any`,
+`@microsoft/sdl/no-document-write`, `no-eval`, `@microsoft/sdl/no-inner-html`,
+and `obsidianmd/no-nodejs-modules`. Fix the code instead.
 
-### Running the Linter
+Any disable that survives must carry a description:
+`// eslint-disable-next-line some-rule -- why this is necessary`
 
-```bash
-npm run lint
-```
+## Results depend on the installed `obsidian` version
 
-### Notes
+`obsidian` is declared as `"latest"`, so `npm install` and `npm ci` can resolve
+different typings. Two rules read those typings and their counts move with it:
 
-- The Obsidian ESLint plugin was installed from GitHub and built manually
-- It requires ESLint v9+ and uses ES modules
-- TypeScript type-aware linting is enabled for better analysis
-- The plugin validates Obsidian-specific guidelines and best practices
+- `@typescript-eslint/no-deprecated` — fires only on `@deprecated` tags present
+  in the installed `obsidian.d.ts`.
+- `obsidianmd/no-unsupported-api` — resolves API symbols through them.
 
-### Rules Applied
+At `obsidian@1.12.3` (the current lockfile pin) `setWarning` is not deprecated
+and `getSettingDefinitions` does not exist; both arrive in 1.13.0 and will add
+warnings when the floating spec picks it up.
 
-The plugin includes rules for:
-- Command naming conventions
-- Settings tab best practices
-- Vault file operations
-- UI text casing (sentence case)
-- Forbidden DOM elements
-- Plugin lifecycle management
-- And many more Obsidian-specific validations
-
-See the [official documentation](https://github.com/obsidianmd/eslint-plugin) for more details.
+**Always run `npm ci`, not `npm install`, before comparing lint counts.**

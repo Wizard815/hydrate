@@ -25,7 +25,7 @@ export class ReviewToolbar {
   }
 
   private createToolbar(parentEl: HTMLElement): HTMLElement {
-    const toolbar = document.createElement('div');
+    const toolbar = createDiv();
     toolbar.className = 'hydrate-review-toolbar';
 
     // Make it draggable
@@ -46,10 +46,12 @@ export class ReviewToolbar {
 
     toolbar.addEventListener('drag', (e) => {
       if (isDragging && e.clientX > 0 && e.clientY > 0) {
-        toolbar.style.left = `${e.clientX - offsetX}px`;
-        toolbar.style.top = `${e.clientY - offsetY}px`;
-        toolbar.style.right = 'auto';
-        toolbar.style.bottom = 'auto';
+        toolbar.setCssProps({
+          '--hydrate-toolbar-left': `${e.clientX - offsetX}px`,
+          '--hydrate-toolbar-top': `${e.clientY - offsetY}px`,
+          '--hydrate-toolbar-right': 'auto',
+          '--hydrate-toolbar-bottom': 'auto',
+        });
       }
     });
 
@@ -58,18 +60,19 @@ export class ReviewToolbar {
     });
 
     // Header with count
-    const header = document.createElement('div');
+    const header = createDiv();
     header.className = 'hydrate-review-toolbar-header';
 
-    this.countEl = document.createElement('span');
+    this.countEl = createSpan();
     this.countEl.className = 'hydrate-review-toolbar-count';
-    this.countEl.textContent = '0 changes remaining';
+    // Placeholder; updateCount() is called immediately after construction.
+    this.countEl.textContent = 'No changes remaining';
     header.appendChild(this.countEl);
 
     // Jump to next button
-    const jumpBtn = document.createElement('button');
+    const jumpBtn = createEl('button');
     jumpBtn.className = 'hydrate-review-toolbar-btn hydrate-review-jump';
-    jumpBtn.innerHTML = '&#8595;'; // Down arrow
+    jumpBtn.setText('↓'); // Down arrow
     jumpBtn.title = 'Jump to next change';
     jumpBtn.onclick = () => this.callbacks.onJumpToNext();
     header.appendChild(jumpBtn);
@@ -77,20 +80,20 @@ export class ReviewToolbar {
     toolbar.appendChild(header);
 
     // Button container
-    const buttons = document.createElement('div');
+    const buttons = createDiv();
     buttons.className = 'hydrate-review-toolbar-buttons';
 
-    const acceptAllBtn = document.createElement('button');
+    const acceptAllBtn = createEl('button');
     acceptAllBtn.className = 'hydrate-review-toolbar-btn hydrate-review-accept-all';
-    acceptAllBtn.textContent = 'Accept All';
+    acceptAllBtn.textContent = 'Accept all';
     acceptAllBtn.onclick = () => this.callbacks.onAcceptAll();
 
-    const rejectAllBtn = document.createElement('button');
+    const rejectAllBtn = createEl('button');
     rejectAllBtn.className = 'hydrate-review-toolbar-btn hydrate-review-reject-all';
-    rejectAllBtn.textContent = 'Reject All';
+    rejectAllBtn.textContent = 'Reject all';
     rejectAllBtn.onclick = () => this.callbacks.onRejectAll();
 
-    const doneBtn = document.createElement('button');
+    const doneBtn = createEl('button');
     doneBtn.className = 'hydrate-review-toolbar-btn hydrate-review-done';
     doneBtn.textContent = 'Done';
     doneBtn.onclick = () => this.callbacks.onDone();
@@ -101,7 +104,7 @@ export class ReviewToolbar {
     toolbar.appendChild(buttons);
 
     // Add to parent (hidden initially)
-    toolbar.style.display = 'none';
+    toolbar.addClass('hydrate-hidden');
     parentEl.appendChild(toolbar);
 
     return toolbar;
@@ -126,7 +129,7 @@ export class ReviewToolbar {
    * Show the toolbar
    */
   public show(): void {
-    this.containerEl.style.display = 'block';
+    this.containerEl.removeClass('hydrate-hidden');
     this.isVisible = true;
   }
 
@@ -134,7 +137,7 @@ export class ReviewToolbar {
    * Hide the toolbar
    */
   public hide(): void {
-    this.containerEl.style.display = 'none';
+    this.containerEl.addClass('hydrate-hidden');
     this.isVisible = false;
   }
 
@@ -156,10 +159,12 @@ export class ReviewToolbar {
    * Reset position to default (bottom-right)
    */
   public resetPosition(): void {
-    this.containerEl.style.left = 'auto';
-    this.containerEl.style.top = 'auto';
-    this.containerEl.style.right = '16px';
-    this.containerEl.style.bottom = '16px';
+    this.containerEl.setCssProps({
+      '--hydrate-toolbar-left': 'auto',
+      '--hydrate-toolbar-top': 'auto',
+      '--hydrate-toolbar-right': '16px',
+      '--hydrate-toolbar-bottom': '16px',
+    });
   }
 }
 

@@ -11,7 +11,9 @@ import { httpRequest } from "../../utils/httpClient";
 import { readSseStream } from "../../utils/sseClient";
 import { createDebounce } from "../../utils/throttle";
 import HydratePlugin from "../../main"; // Corrected path to be relative to current dir
-import { DiffReviewModal, DiffReviewResult } from "../DiffReviewModal"; // Corrected path (assuming same dir as view)
+// Only the result type is still used; the modal was superseded by the inline
+// review system. See hydrateagent/hydrate#2.
+import { DiffReviewResult } from "../DiffReviewModal";
 import {
 	getInlineReviewController,
 	InlineReviewController,
@@ -20,6 +22,7 @@ import { RegistryEntry, Patch, ChatHistory, ChatTurn, ImageAttachment, isStoredI
 import { executeSingleTool } from "./toolDispatch";
 import { partitionToolCalls, runNonEditToolCalls } from "./toolCallRunner";
 import { devLog } from "../../utils/logger";
+import { getErrorMessage } from "../../utils/errors";
 import { capToolResult } from "../../toolOutputLimits";
 import { MCPToolSchemaWithMetadata } from "../../mcp/MCPServerManager";
 import {
@@ -288,27 +291,27 @@ export class HydrateView extends ItemView {
 		};
 
 		// Create suggestion pills container (above chat area)
-		this.suggestionPillsContainer = container.createEl("div", {
+		this.suggestionPillsContainer = container.createDiv({
 			cls: "hydrate-suggestion-pills",
 		});
 
 		// Create chat container
-		this.chatContainer = container.createEl("div", {
+		this.chatContainer = container.createDiv({
 			cls: "hydrate-chat-container",
 		});
 
 		// Create input section
-		const inputSection = container.createEl("div", {
+		const inputSection = container.createDiv({
 			cls: "hydrate-input-section",
 		});
 
 		// Create file pills container
-		this.filePillsContainer = inputSection.createEl("div", {
+		this.filePillsContainer = inputSection.createDiv({
 			cls: "hydrate-file-pills",
 		});
 
 		// Create chat history controls container
-		const chatHistoryContainer = inputSection.createEl("div", {
+		const chatHistoryContainer = inputSection.createDiv({
 			cls: "hydrate-chat-history-controls",
 		});
 
@@ -317,30 +320,30 @@ export class HydrateView extends ItemView {
 			cls: "hydrate-button hydrate-icon-button",
 			attr: { title: "New chat" },
 		});
-		newChatButton.createEl("span", { text: "+" });
+		newChatButton.createSpan({ text: "+" });
 
 		// Create chat history button (history icon)
 		const chatHistoryButton = chatHistoryContainer.createEl("button", {
 			cls: "hydrate-button hydrate-icon-button",
 			attr: { title: "Chat history" },
 		});
-		chatHistoryButton.createEl("span", { text: "↺" });
+		chatHistoryButton.createSpan({ text: "↺" });
 
 		// Create export chat button (download icon)
 		const exportChatButton = chatHistoryContainer.createEl("button", {
 			cls: "hydrate-button hydrate-icon-button",
 			attr: { title: "Export chat as note" },
 		});
-		exportChatButton.createEl("span", { text: "↓" });
+		exportChatButton.createSpan({ text: "↓" });
 
 		// Create context meter (hidden until first context_status arrives)
-		this.contextMeterEl = inputSection.createEl("div", {
+		this.contextMeterEl = inputSection.createDiv({
 			cls: "hydrate-context-meter",
 		});
 		this.contextMeterEl.hide();
 
 		// Create input container with relative positioning for button overlay
-		const inputContainer = inputSection.createEl("div", {
+		const inputContainer = inputSection.createDiv({
 			cls: "hydrate-input-container",
 		});
 
@@ -351,13 +354,13 @@ export class HydrateView extends ItemView {
 		});
 
 		// Create suggestions container (dropdown for slash commands and note search)
-		this.suggestionsContainer = inputContainer.createEl("div", {
+		this.suggestionsContainer = inputContainer.createDiv({
 			cls: "hydrate-suggestions-container",
 		});
 		this.suggestionsContainer.addClass("hydrate-suggestions-container");
 
 		// Create button container positioned inside the textarea
-		const buttonContainer = inputContainer.createEl("div", {
+		const buttonContainer = inputContainer.createDiv({
 			cls: "hydrate-button-overlay",
 		});
 
@@ -381,7 +384,7 @@ export class HydrateView extends ItemView {
 		});
 
 		// Create loading indicator
-		this.loadingIndicator = this.chatContainer.createEl("div", {
+		this.loadingIndicator = this.chatContainer.createDiv({
 			cls: "hydrate-loading",
 			text: "Processing...",
 		});
@@ -394,7 +397,9 @@ export class HydrateView extends ItemView {
 		);
 		// Handle paste for images
 		this.textInput.addEventListener("paste", (e: ClipboardEvent) => {
-			handlePaste(this, e);
+			handlePaste(this, e).catch((error: unknown) => {
+				devLog.error("Paste handling failed", error);
+			});
 		});
 		sendButton.addEventListener("click", () => void handleSend(this));
 		clearButton.addEventListener("click", () => void handleClear(this));
@@ -433,9 +438,11 @@ export class HydrateView extends ItemView {
 				}
 			}
 		});
-		container.addEventListener("drop", (e) =>
-			handleDrop(this, e as DragEvent),
-		);
+		container.addEventListener("drop", (e) => {
+			handleDrop(this, e as DragEvent).catch((error: unknown) => {
+				devLog.error("Drop handling failed", error);
+			});
+		});
 
 		// Auto-adjust textarea height on input
 		this.textInput.addEventListener("input", adjustTextareaHeight);
@@ -555,23 +562,23 @@ export class HydrateView extends ItemView {
 
 					// Build content with optional thinking section
 					if (thinking) {
-						const container = document.createElement("div");
+						const container = createDiv();
 
 						// Collapsible thinking section
-						const details = document.createElement("details");
+						const details = createEl("details");
 						details.className = "hydrate-thinking-section";
-						const summary = document.createElement("summary");
+						const summary = createEl("summary");
 						summary.className = "hydrate-thinking-summary";
 						summary.textContent = "Model thinking...";
 						details.appendChild(summary);
-						const thinkingContent = document.createElement("div");
+						const thinkingContent = createDiv();
 						thinkingContent.className = "hydrate-thinking-content";
 						thinkingContent.textContent = thinking;
 						details.appendChild(thinkingContent);
 						container.appendChild(details);
 
 						// Main text content - render as markdown
-						const textDiv = document.createElement("div");
+						const textDiv = createDiv();
 						await MarkdownRenderer.render(
 							this.plugin.app,
 							text,
@@ -958,12 +965,6 @@ export class HydrateView extends ItemView {
 					typeof toolCall.params.path === "string"
 						? toolCall.params.path
 						: "unknown";
-				const toolName: string =
-					typeof toolCall.tool === "string" ? toolCall.tool : "edit";
-				const instructions =
-					(toolCall.params.instructions as string) ||
-					`Apply ${toolName} to ${targetPath}`;
-
 				// Prepare content based on tool type
 				let originalContent = "";
 				let proposedContent = "";
@@ -1173,7 +1174,7 @@ export class HydrateView extends ItemView {
 			new Notice("Chat exported successfully");
 		} catch (error) {
 			devLog.error("Error exporting chat:", error);
-			new Notice(`Failed to export chat: ${error.message}`);
+			new Notice(`Failed to export chat: ${getErrorMessage(error)}`);
 		}
 	}
 
@@ -1307,7 +1308,7 @@ export class HydrateView extends ItemView {
 		renderFilePills(this);
 
 		// Refresh suggestions based on loaded conversation
-		setTimeout(() => {
+		window.setTimeout(() => {
 			void this.refreshContextSuggestions();
 		}, 2000);
 	}
@@ -1515,7 +1516,7 @@ export class HydrateView extends ItemView {
 		// Close any existing popup
 		this.closeActivePopup();
 
-		const popup = document.createElement("div");
+		const popup = createDiv();
 		popup.className = "hydrate-popup";
 
 		// Add buttons first
@@ -1546,7 +1547,7 @@ export class HydrateView extends ItemView {
 				document.removeEventListener("click", closeOnOutsideClick);
 			}
 		};
-		setTimeout(() => {
+		window.setTimeout(() => {
 			document.addEventListener("click", closeOnOutsideClick);
 		}, 0);
 
@@ -1591,7 +1592,7 @@ export class HydrateView extends ItemView {
 			const filename =
 				suggestion.filePath.split("/").pop()?.replace(/\.md$/, "") ||
 				suggestion.filePath;
-			pill.createEl("span", { text: filename });
+			pill.createSpan({ text: filename });
 
 			// Add click handler to show popup with options
 			pill.addEventListener("click", (e) => {

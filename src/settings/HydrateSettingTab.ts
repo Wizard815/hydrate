@@ -16,6 +16,13 @@ import { RegistryEditModal } from "./RegistryEditModal";
 import { RuleEditModal } from "./RuleEditModal"; // <<< IMPORT NEW MODAL
 import { MCPServersConfigModal } from "./MCPServerEditModal";
 import { devLog } from "../utils/logger";
+import { getErrorMessage } from "../utils/errors";
+import {
+	parseJsonResponse,
+	type ApiErrorBody,
+	type LicenseInfo,
+	type RegistrationQuota,
+} from "./licenseTypes";
 import { httpRequest } from "../utils/httpClient";
 import { MCPServerSettingsModal } from "./MCPServerSettingsModal"; // <<< IMPORT MCP SERVER MODAL
 // Settings styles are now compiled into styles.css via hydrate-styles.css
@@ -228,7 +235,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 			new Setting(containerEl)
 				.setName("Backend URL")
 				.setDesc(
-					"url of the hydrate agent backend (e.g., http://localhost:8000). in production, this is hardcoded to https://api.hydrateagent.com/",
+					"URL of the Hydrate agent backend (e.g., http://localhost:8000). In production, this is hardcoded to https://api.hydrateagent.com/",
 				)
 				.addText((text) => {
 					text.setPlaceholder("URL")
@@ -317,7 +324,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 			.setHeading();
 
 		// Subscription Status Display
-		const subscriptionStatusSection = containerEl.createEl("div", {
+		const subscriptionStatusSection = containerEl.createDiv({
 			cls: "hydrate-subscription-status",
 		});
 
@@ -325,7 +332,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 			new Setting(subscriptionStatusSection)
 				.setName("Subscription status")
 				.setHeading();
-			const statusDiv = subscriptionStatusSection.createEl("div", {
+			const statusDiv = subscriptionStatusSection.createDiv({
 				cls: "hydrate-subscription-status-display",
 			});
 			statusDiv.createEl("p", { text: "Loading subscription status..." });
@@ -334,7 +341,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 			new Setting(subscriptionStatusSection)
 				.setName("Current tier: free")
 				.setHeading();
-			const freeInfoDiv = subscriptionStatusSection.createEl("div", {
+			const freeInfoDiv = subscriptionStatusSection.createDiv({
 				cls: "hydrate-subscription-info",
 			});
 			freeInfoDiv.createEl("p", {
@@ -377,7 +384,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 					}),
 			);
 		// Add a link to the Hydrate home page for subscriptions
-		const licenseLink = document.createElement("a");
+		const licenseLink = createEl("a");
 		licenseLink.href = "https://hydrateagent.com";
 		licenseLink.target = "_blank";
 		licenseLink.rel = "noopener noreferrer";
@@ -393,8 +400,8 @@ export class HydrateSettingTab extends PluginSettingTab {
 		apiKeysDesc.addClass("hydrate-api-keys-desc");
 
 		new Setting(containerEl)
-			.setName("Openai key")
-			.setDesc("Required for gpt models.")
+			.setName("OpenAI key")
+			.setDesc("Required for GPT models.")
 			.addText((text) => {
 				let visible = false;
 				text.setPlaceholder("API key")
@@ -405,7 +412,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 					});
 				text.inputEl.type = "password";
 				// Add flat eye icon button
-				const eyeBtn = document.createElement("button");
+				const eyeBtn = createEl("button");
 				eyeBtn.type = "button";
 				eyeBtn.addClass("hydrate-eye-button");
 				const eyeChar = document.createTextNode("\u{1F441}");
@@ -420,7 +427,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Anthropic key")
-			.setDesc("Required for claude models.")
+			.setDesc("Required for Claude models.")
 			.addText((text) => {
 				let visible = false;
 				text.setPlaceholder("API key")
@@ -431,7 +438,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 					});
 				text.inputEl.type = "password";
 				// Add flat eye icon button
-				const eyeBtn = document.createElement("button");
+				const eyeBtn = createEl("button");
 				eyeBtn.type = "button";
 				eyeBtn.addClass("hydrate-eye-button");
 				const eyeChar2 = document.createTextNode("\u{1F441}");
@@ -446,7 +453,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Google key")
-			.setDesc("Required for gemini models.")
+			.setDesc("Required for Gemini models.")
 			.addText((text) => {
 				let visible = false;
 				text.setPlaceholder("API key")
@@ -457,7 +464,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 					});
 				text.inputEl.type = "password";
 				// Add flat eye icon button
-				const eyeBtn = document.createElement("button");
+				const eyeBtn = createEl("button");
 				eyeBtn.type = "button";
 				eyeBtn.addClass("hydrate-eye-button");
 				const eyeChar3 = document.createTextNode("\u{1F441}");
@@ -476,7 +483,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 		const formatRegistrySection = containerEl.createDiv(
 			"hydrate-settings-section",
 		);
-		const formatHeadingEl = formatRegistrySection.createEl("div", {
+		const formatHeadingEl = formatRegistrySection.createDiv({
 			cls: "hydrate-settings-heading",
 		});
 		new Setting(formatHeadingEl)
@@ -528,7 +535,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 		const rulesRegistrySection = containerEl.createDiv(
 			"hydrate-settings-section",
 		);
-		const rulesHeadingEl = rulesRegistrySection.createEl("div", {
+		const rulesHeadingEl = rulesRegistrySection.createDiv({
 			cls: "hydrate-settings-heading",
 		});
 		new Setting(rulesHeadingEl).setName("Rules registry").setHeading();
@@ -571,7 +578,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 		const mcpServersSection = containerEl.createDiv(
 			"hydrate-settings-section",
 		);
-		const mcpHeadingEl = mcpServersSection.createEl("div", {
+		const mcpHeadingEl = mcpServersSection.createDiv({
 			cls: "hydrate-settings-heading",
 		});
 		new Setting(mcpHeadingEl).setName("Servers").setHeading();
@@ -674,7 +681,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 				cls: "hydrate-embeddings-notice",
 			});
 			noticeEl.createEl("p", {
-				text: "💡 enable embeddings for context search. Requires an API key.",
+				text: "💡 Enable embeddings for context search. Requires an API key.",
 				cls: "hydrate-embeddings-help",
 			});
 		}
@@ -722,12 +729,12 @@ export class HydrateSettingTab extends PluginSettingTab {
 			new Setting(containerEl)
 				.setName("Embedding URL")
 				.setDesc(
-					"Full URL of the openai-compatible embedding API endpoint",
+					"Full URL of the OpenAI-compatible embedding API endpoint",
 				)
 				.addText((text) =>
 					text
 						.setPlaceholder(
-							"e.g., https://api.openai.com/v1/embeddings",
+							"E.g., https://api.openai.com/v1/embeddings",
 						)
 						.setValue(this.plugin.settings.remoteEmbeddingUrl)
 						.onChange(async (value) => {
@@ -787,7 +794,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 						}),
 				);
 
-			const indexingDesc = document.createDocumentFragment();
+			const indexingDesc = createFragment();
 			indexingDesc.append(
 				"Scan the entire vault and generate embeddings for specified file types using the configured remote endpoint.",
 				indexingDesc.createEl("br"),
@@ -1160,13 +1167,13 @@ export class HydrateSettingTab extends PluginSettingTab {
 
 			// Server Info
 			const serverInfo = serverRow.createDiv("hydrate-mcp-server-info");
-			const serverTitle = serverInfo.createEl("div", {
+			const serverTitle = serverInfo.createDiv({
 				cls: "hydrate-mcp-server-title",
 			});
 			serverTitle.createEl("strong", { text: server.name || server.id });
 
 			// Health Indicator
-			const healthIndicator = serverTitle.createEl("span", {
+			const healthIndicator = serverTitle.createSpan({
 				cls: "hydrate-mcp-health",
 			});
 			const healthStatus = this.getServerHealthStatus(server);
@@ -1176,12 +1183,12 @@ export class HydrateSettingTab extends PluginSettingTab {
 
 			// Optional: Show basic transport type only
 			if (server.transport?.type === "sse" || server.command) {
-				const serverDetails = serverInfo.createEl("div", {
+				const serverDetails = serverInfo.createDiv({
 					cls: "hydrate-mcp-server-details",
 				});
 				const transportType =
 					server.transport?.type === "sse" ? "SSE" : "STDIO";
-				serverDetails.createEl("span", { text: transportType });
+				serverDetails.createSpan({ text: transportType });
 			}
 
 			// Server Controls
@@ -1349,7 +1356,9 @@ export class HydrateSettingTab extends PluginSettingTab {
 				);
 			}
 		} catch (error) {
-			new Notice(`❌ ${server.name}: Test failed - ${error.message}`);
+			new Notice(
+				`❌ ${server.name}: Test failed - ${getErrorMessage(error)}`,
+			);
 		}
 	}
 
@@ -1510,9 +1519,8 @@ export class HydrateSettingTab extends PluginSettingTab {
 				return;
 			}
 
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const licenseInfo = await (response.json as () => Promise<any>)();
-			const tierName = licenseInfo.tier?.toUpperCase() || "UNKNOWN";
+			const licenseInfo = await parseJsonResponse<LicenseInfo>(response);
+			const tierName = licenseInfo.tier?.toUpperCase() ?? "UNKNOWN";
 			// Prefer the backend's computed lifecycle status (active /
 			// expired / inactive); fall back to the is_active flag for
 			// older backends that don't send `status`.
@@ -1522,7 +1530,9 @@ export class HydrateSettingTab extends PluginSettingTab {
 				inactive: "Inactive",
 			};
 			const statusText =
-				statusLabels[licenseInfo.status] ??
+				(licenseInfo.status
+					? statusLabels[licenseInfo.status]
+					: undefined) ??
 				(licenseInfo.is_active ? "Active" : "Inactive");
 			// Style off the true lifecycle status, not the raw is_active flag
 			// (an expired-but-still-flagged-active key must not show green).
@@ -1544,7 +1554,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 			// Tier information
 			const tierP = infoContainer.createEl("p");
 			tierP.createEl("strong", { text: "Tier: " });
-			tierP.createEl("span", {
+			tierP.createSpan({
 				text: tierName,
 				cls: statusClass,
 			});
@@ -1552,7 +1562,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 			// Status information
 			const statusP = infoContainer.createEl("p");
 			statusP.createEl("strong", { text: "Status: " });
-			statusP.createEl("span", {
+			statusP.createSpan({
 				text: statusText,
 				cls: statusClass,
 			});
@@ -1611,7 +1621,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 		} catch (error) {
 			statusDiv.empty();
 			statusDiv.createEl("p", {
-				text: `Error loading subscription status: ${error.message}`,
+				text: `Error loading subscription status: ${getErrorMessage(error)}`,
 				cls: "hydrate-error-message",
 			});
 		}
@@ -1636,8 +1646,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 				return;
 			}
 
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const quota = await (response.json as () => Promise<any>)();
+			const quota = await parseJsonResponse<RegistrationQuota>(response);
 			statusDiv.empty();
 
 			statusDiv
@@ -1645,23 +1654,25 @@ export class HydrateSettingTab extends PluginSettingTab {
 				.createEl("strong", { text: "Registration status:" });
 
 			const quotaList = statusDiv.createEl("ul");
+			const used = quota.registration_count ?? 0;
+			const max = quota.max_reregistrations ?? 0;
 			quotaList.createEl("li", {
-				text: `Re-registrations used: ${quota.registration_count} / ${quota.max_reregistrations}`,
+				text: `Re-registrations used: ${used} / ${max}`,
 			});
 			quotaList.createEl("li", {
-				text: `Quota resets: ${new Date(
-					quota.next_reset,
-				).toLocaleDateString()}`,
-			});
-			quotaList.createEl("li", {
-				text: `Remaining: ${
-					quota.max_reregistrations - quota.registration_count
+				text: `Quota resets: ${
+					quota.next_reset
+						? new Date(quota.next_reset).toLocaleDateString()
+						: "unknown"
 				}`,
+			});
+			quotaList.createEl("li", {
+				text: `Remaining: ${max - used}`,
 			});
 		} catch (error) {
 			statusDiv.empty();
 			statusDiv.createEl("p", {
-				text: `Error loading registration status: ${error.message}`,
+				text: `Error loading registration status: ${getErrorMessage(error)}`,
 				cls: "hydrate-error-message",
 			});
 		}
@@ -1685,7 +1696,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 					text: "Are you sure you want to re-register your API keys? This will revoke all previously registered keys and count against your annual quota.",
 				});
 
-				const buttonContainer = contentEl.createEl("div", {
+				const buttonContainer = contentEl.createDiv({
 					cls: "hydrate-modal-button-container",
 				});
 				buttonContainer.addClass("hydrate-button-container");
@@ -1753,12 +1764,17 @@ export class HydrateSettingTab extends PluginSettingTab {
 					await this.loadRegistrationStatus(statusDiv);
 				}
 			} else {
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				const error = await (response.json as () => Promise<any>)();
-				new Notice(`Error re-registering API keys: ${error.detail}`);
+				const error = await parseJsonResponse<ApiErrorBody>(response);
+				new Notice(
+					`Error re-registering API keys: ${
+						error.detail ?? response.statusText
+					}`,
+				);
 			}
 		} catch (error) {
-			new Notice(`Error re-registering API keys: ${error.message}`);
+			new Notice(
+				`Error re-registering API keys: ${getErrorMessage(error)}`,
+			);
 		}
 	}
 
