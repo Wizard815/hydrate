@@ -235,7 +235,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 			new Setting(containerEl)
 				.setName("Backend URL")
 				.setDesc(
-					"url of the hydrate agent backend (e.g., http://localhost:8000). in production, this is hardcoded to https://api.hydrateagent.com/",
+					"URL of the Hydrate agent backend (e.g., http://localhost:8000). In production, this is hardcoded to https://api.hydrateagent.com/",
 				)
 				.addText((text) => {
 					text.setPlaceholder("URL")
@@ -400,8 +400,8 @@ export class HydrateSettingTab extends PluginSettingTab {
 		apiKeysDesc.addClass("hydrate-api-keys-desc");
 
 		new Setting(containerEl)
-			.setName("Openai key")
-			.setDesc("Required for gpt models.")
+			.setName("OpenAI key")
+			.setDesc("Required for GPT models.")
 			.addText((text) => {
 				let visible = false;
 				text.setPlaceholder("API key")
@@ -427,7 +427,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Anthropic key")
-			.setDesc("Required for claude models.")
+			.setDesc("Required for Claude models.")
 			.addText((text) => {
 				let visible = false;
 				text.setPlaceholder("API key")
@@ -453,7 +453,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Google key")
-			.setDesc("Required for gemini models.")
+			.setDesc("Required for Gemini models.")
 			.addText((text) => {
 				let visible = false;
 				text.setPlaceholder("API key")
@@ -681,7 +681,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 				cls: "hydrate-embeddings-notice",
 			});
 			noticeEl.createEl("p", {
-				text: "💡 enable embeddings for context search. Requires an API key.",
+				text: "💡 Enable embeddings for context search. Requires an API key.",
 				cls: "hydrate-embeddings-help",
 			});
 		}
@@ -729,12 +729,12 @@ export class HydrateSettingTab extends PluginSettingTab {
 			new Setting(containerEl)
 				.setName("Embedding URL")
 				.setDesc(
-					"Full URL of the openai-compatible embedding API endpoint",
+					"Full URL of the OpenAI-compatible embedding API endpoint",
 				)
 				.addText((text) =>
 					text
 						.setPlaceholder(
-							"e.g., https://api.openai.com/v1/embeddings",
+							"E.g., https://api.openai.com/v1/embeddings",
 						)
 						.setValue(this.plugin.settings.remoteEmbeddingUrl)
 						.onChange(async (value) => {

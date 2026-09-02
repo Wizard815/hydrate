@@ -65,13 +65,14 @@ export class ReviewToolbar {
 
     this.countEl = createSpan();
     this.countEl.className = 'hydrate-review-toolbar-count';
-    this.countEl.textContent = '0 changes remaining';
+    // Placeholder; updateCount() is called immediately after construction.
+    this.countEl.textContent = 'No changes remaining';
     header.appendChild(this.countEl);
 
     // Jump to next button
     const jumpBtn = createEl('button');
     jumpBtn.className = 'hydrate-review-toolbar-btn hydrate-review-jump';
-    jumpBtn.innerHTML = '&#8595;'; // Down arrow
+    jumpBtn.setText('↓'); // Down arrow
     jumpBtn.title = 'Jump to next change';
     jumpBtn.onclick = () => this.callbacks.onJumpToNext();
     header.appendChild(jumpBtn);
@@ -84,12 +85,12 @@ export class ReviewToolbar {
 
     const acceptAllBtn = createEl('button');
     acceptAllBtn.className = 'hydrate-review-toolbar-btn hydrate-review-accept-all';
-    acceptAllBtn.textContent = 'Accept All';
+    acceptAllBtn.textContent = 'Accept all';
     acceptAllBtn.onclick = () => this.callbacks.onAcceptAll();
 
     const rejectAllBtn = createEl('button');
     rejectAllBtn.className = 'hydrate-review-toolbar-btn hydrate-review-reject-all';
-    rejectAllBtn.textContent = 'Reject All';
+    rejectAllBtn.textContent = 'Reject all';
     rejectAllBtn.onclick = () => this.callbacks.onRejectAll();
 
     const doneBtn = createEl('button');

@@ -704,7 +704,7 @@ export const renderImagePreviews = (view: HydrateView): void => {
 	}
 
 	// Clear existing previews
-	imagePreviews.innerHTML = "";
+	imagePreviews.empty();
 
 	// Hide if no images
 	imagePreviews.toggleClass(
@@ -726,7 +726,7 @@ export const renderImagePreviews = (view: HydrateView): void => {
 
 		const removeBtn = createEl("button");
 		removeBtn.className = "hydrate-image-remove";
-		removeBtn.innerHTML = "×";
+		removeBtn.setText("×");
 		removeBtn.onclick = (e) => {
 			e.stopPropagation();
 			view.attachedImages.splice(index, 1);

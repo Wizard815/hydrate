@@ -334,7 +334,7 @@ export const changeHoverPlugin = ViewPlugin.fromClass(
 
       const acceptBtn = createEl('button');
       acceptBtn.className = 'hydrate-review-btn hydrate-review-accept';
-      acceptBtn.innerHTML = '&#x2713;'; // Checkmark
+      acceptBtn.setText('✓'); // Checkmark
       acceptBtn.title = 'Accept this change';
       acceptBtn.onclick = (e) => {
         e.preventDefault();
@@ -344,7 +344,7 @@ export const changeHoverPlugin = ViewPlugin.fromClass(
 
       const rejectBtn = createEl('button');
       rejectBtn.className = 'hydrate-review-btn hydrate-review-reject';
-      rejectBtn.innerHTML = '&#x2717;'; // X mark
+      rejectBtn.setText('✗'); // X mark
       rejectBtn.title = 'Reject this change';
       rejectBtn.onclick = (e) => {
         e.preventDefault();
