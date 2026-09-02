@@ -6,6 +6,7 @@ import {
 	TextAreaComponent,
 } from "obsidian";
 import { MCPServerConfig } from "../mcp/MCPServerConfig";
+import { getErrorMessage } from "../utils/errors";
 
 export class MCPServersConfigModal extends Modal {
 	private onSave: (configs: MCPServerConfig[]) => void;
@@ -225,7 +226,9 @@ export class MCPServersConfigModal extends Modal {
 
 			return configs;
 		} catch (error) {
-			throw new Error(`Invalid JSON configuration: ${error.message}`);
+			throw new Error(
+				`Invalid JSON configuration: ${getErrorMessage(error)}`,
+			);
 		}
 	}
 
@@ -269,7 +272,7 @@ export class MCPServersConfigModal extends Modal {
 			);
 			return true;
 		} catch (error) {
-			this.showError(error.message);
+			this.showError(getErrorMessage(error));
 			return false;
 		}
 	}

@@ -20,6 +20,7 @@ import { RegistryEntry, Patch, ChatHistory, ChatTurn, ImageAttachment, isStoredI
 import { executeSingleTool } from "./toolDispatch";
 import { partitionToolCalls, runNonEditToolCalls } from "./toolCallRunner";
 import { devLog } from "../../utils/logger";
+import { getErrorMessage } from "../../utils/errors";
 import { capToolResult } from "../../toolOutputLimits";
 import { MCPToolSchemaWithMetadata } from "../../mcp/MCPServerManager";
 import {
@@ -1173,7 +1174,7 @@ export class HydrateView extends ItemView {
 			new Notice("Chat exported successfully");
 		} catch (error) {
 			devLog.error("Error exporting chat:", error);
-			new Notice(`Failed to export chat: ${error.message}`);
+			new Notice(`Failed to export chat: ${getErrorMessage(error)}`);
 		}
 	}
 

@@ -16,6 +16,7 @@ import { RegistryEditModal } from "./RegistryEditModal";
 import { RuleEditModal } from "./RuleEditModal"; // <<< IMPORT NEW MODAL
 import { MCPServersConfigModal } from "./MCPServerEditModal";
 import { devLog } from "../utils/logger";
+import { getErrorMessage } from "../utils/errors";
 import { httpRequest } from "../utils/httpClient";
 import { MCPServerSettingsModal } from "./MCPServerSettingsModal"; // <<< IMPORT MCP SERVER MODAL
 // Settings styles are now compiled into styles.css via hydrate-styles.css
@@ -1349,7 +1350,9 @@ export class HydrateSettingTab extends PluginSettingTab {
 				);
 			}
 		} catch (error) {
-			new Notice(`❌ ${server.name}: Test failed - ${error.message}`);
+			new Notice(
+				`❌ ${server.name}: Test failed - ${getErrorMessage(error)}`,
+			);
 		}
 	}
 
@@ -1611,7 +1614,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 		} catch (error) {
 			statusDiv.empty();
 			statusDiv.createEl("p", {
-				text: `Error loading subscription status: ${error.message}`,
+				text: `Error loading subscription status: ${getErrorMessage(error)}`,
 				cls: "hydrate-error-message",
 			});
 		}
@@ -1661,7 +1664,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 		} catch (error) {
 			statusDiv.empty();
 			statusDiv.createEl("p", {
-				text: `Error loading registration status: ${error.message}`,
+				text: `Error loading registration status: ${getErrorMessage(error)}`,
 				cls: "hydrate-error-message",
 			});
 		}
@@ -1758,7 +1761,9 @@ export class HydrateSettingTab extends PluginSettingTab {
 				new Notice(`Error re-registering API keys: ${error.detail}`);
 			}
 		} catch (error) {
-			new Notice(`Error re-registering API keys: ${error.message}`);
+			new Notice(
+				`Error re-registering API keys: ${getErrorMessage(error)}`,
+			);
 		}
 	}
 

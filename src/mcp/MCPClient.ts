@@ -4,6 +4,7 @@ import {
 	StdioTransport,
 	WebSocketTransport,
 } from "./MCPTransport";
+import { getErrorMessage } from "../utils/errors";
 
 /**
  * MCP Protocol message types
@@ -122,7 +123,9 @@ export class MCPClient extends EventEmitter {
 			await this.notify("initialized", {});
 		} catch (error) {
 			await this.disconnect();
-			throw new Error(`MCP initialization failed: ${error.message}`);
+			throw new Error(
+				`MCP initialization failed: ${getErrorMessage(error)}`,
+			);
 		}
 	}
 
