@@ -15,7 +15,7 @@
 - **💳 Payment Required:** Full access to Hydrate requires a paid subscription
 - **👤 Account Required:** You must create an account to use all features
 - **🌐 Network Use:** This plugin connects to remote AI services to provide intelligent features
-- **📊 Telemetry:** Anonymous usage analytics are collected to improve the service
+- **📊 Telemetry:** Anonymous usage analytics are collected **server-side** when you use the Hydrate backend. The plugin itself contains no client-side telemetry.
 - **🔒 Closed Source:** This plugin is Apache 2 licensed, but relies on proprietary server side code for functionality.
 
 ### Remote Services Used
