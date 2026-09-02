@@ -425,7 +425,7 @@ export default class HydratePlugin extends Plugin {
 
 						await this.app.fileManager.processFrontMatter(
 							file,
-							(frontmatter) => {
+							(frontmatter: Record<string, unknown>) => {
 								frontmatter["hydrate-plugin"] = viewName;
 							},
 						);

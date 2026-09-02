@@ -1,4 +1,4 @@
-import { App, FuzzySuggestModal, FuzzyMatch, TFile } from "obsidian";
+import { App, FuzzySuggestModal, FuzzyMatch } from "obsidian";
 
 interface ViewOption {
 	name: string;

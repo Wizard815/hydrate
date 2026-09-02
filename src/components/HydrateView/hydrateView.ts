@@ -11,7 +11,9 @@ import { httpRequest } from "../../utils/httpClient";
 import { readSseStream } from "../../utils/sseClient";
 import { createDebounce } from "../../utils/throttle";
 import HydratePlugin from "../../main"; // Corrected path to be relative to current dir
-import { DiffReviewModal, DiffReviewResult } from "../DiffReviewModal"; // Corrected path (assuming same dir as view)
+// Only the result type is still used; the modal was superseded by the inline
+// review system. See hydrateagent/hydrate#2.
+import { DiffReviewResult } from "../DiffReviewModal";
 import {
 	getInlineReviewController,
 	InlineReviewController,
@@ -959,12 +961,6 @@ export class HydrateView extends ItemView {
 					typeof toolCall.params.path === "string"
 						? toolCall.params.path
 						: "unknown";
-				const toolName: string =
-					typeof toolCall.tool === "string" ? toolCall.tool : "edit";
-				const instructions =
-					(toolCall.params.instructions as string) ||
-					`Apply ${toolName} to ${targetPath}`;
-
 				// Prepare content based on tool type
 				let originalContent = "";
 				let proposedContent = "";

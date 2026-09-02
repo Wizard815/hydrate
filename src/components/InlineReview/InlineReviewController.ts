@@ -10,7 +10,6 @@ import {
   createInlineReviewExtension,
   setReviewChanges,
   clearReviewChanges,
-  setChangesEffect,
 } from './ChangeDecorationPlugin';
 import { ReviewToolbar, createReviewToolbar } from './ReviewToolbar';
 import { ReviewResult, HydrateChangeEventDetail } from './types';

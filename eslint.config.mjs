@@ -16,6 +16,11 @@ export default [
 	{
 		files: ["**/*.ts", "**/*.tsx"],
 		languageOptions: {
+			globals: {
+				// Injected by esbuild's define at build time. Declared for
+				// TypeScript in src/globals.d.ts, which ESLint does not read.
+				__HYDRATE_DEV__: "readonly",
+			},
 			parserOptions: {
 				projectService: true,
 				tsconfigRootDir: import.meta.dirname,

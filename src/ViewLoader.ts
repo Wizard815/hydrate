@@ -1,6 +1,6 @@
 // src/ViewLoader.ts
 import * as obsidian from "obsidian";
-import { App, TFile, TFolder } from "obsidian";
+import { App } from "obsidian";
 import { transform } from "sucrase";
 import * as React from "react";
 import { devLog } from "./utils/logger";

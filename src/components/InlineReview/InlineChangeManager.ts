@@ -1,4 +1,4 @@
-import { App, MarkdownView, TFile } from 'obsidian';
+import { App } from 'obsidian';
 import diff_match_patch from 'diff-match-patch';
 import {
   PendingChange,

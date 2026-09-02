@@ -23,7 +23,9 @@ interface GeminiContentBlock {
  * Returns an object with thinking (optional) and text content.
  */
 export function parseAgentContent(
-	content: string | GeminiContentBlock[] | unknown
+	// Accepts a plain string, a GeminiContentBlock[], or anything else the
+	// backend might send; the body narrows each case in turn.
+	content: unknown
 ): { thinking: string | null; text: string } {
 	// Simple string content
 	if (typeof content === "string") {
@@ -51,8 +53,20 @@ export function parseAgentContent(
 		return { thinking, text: textParts.join("\n") };
 	}
 
-	// Fallback
-	return { thinking: null, text: String(content || "") };
+	// Fallback: an unrecognised shape. Render it as JSON rather than letting
+	// String() produce "[object Object]".
+	let text = "";
+	if (content != null) {
+		try {
+			text =
+				typeof content === "object"
+					? JSON.stringify(content)
+					: String(content);
+		} catch {
+			text = "";
+		}
+	}
+	return { thinking: null, text };
 }
 
 /**
