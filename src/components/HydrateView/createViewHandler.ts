@@ -5,6 +5,10 @@ import { addMessageToChat, setLoadingState } from "./domUtils";
 import { devLog } from "../../utils/logger";
 import { REACT_HOST_VIEW_TYPE } from "../../main";
 import { ReactViewHost } from "../../ReactViewHost";
+import {
+	parseJsonResponse,
+	type ApiErrorBody,
+} from "../../settings/licenseTypes";
 
 interface GenerateViewResponse {
 	content: string;
@@ -326,11 +330,14 @@ Remember to return ONLY valid JSON with viewName and sampleMarkdown fields.`;
 		});
 
 		if (!fetchResponse.ok) {
-			const errorData = await fetchResponse.json().catch(() => ({}));
-			throw new Error(errorData.detail || `Server error: ${fetchResponse.status}`);
+			const errorData =
+				await parseJsonResponse<ApiErrorBody>(fetchResponse);
+			throw new Error(
+				errorData.detail ?? `Server error: ${fetchResponse.status}`,
+			);
 		}
 
-		const response: GenerateViewResponse = await fetchResponse.json();
+		const response = (await fetchResponse.json()) as GenerateViewResponse;
 
 		if (!response || !response.content) {
 			throw new Error("No response from scaffold generation");
@@ -345,7 +352,7 @@ Remember to return ONLY valid JSON with viewName and sampleMarkdown fields.`;
 			.replace(/\n?```$/i, "")
 			.trim();
 
-		const scaffold: ScaffoldResponse = JSON.parse(jsonContent);
+		const scaffold = JSON.parse(jsonContent) as ScaffoldResponse;
 
 		if (!scaffold.viewName || !scaffold.sampleMarkdown) {
 			throw new Error("Invalid scaffold response structure");
@@ -635,13 +642,14 @@ Return ONLY the JSX code, starting with "import React from 'react';".`;
 		});
 
 		if (!fetchResponse.ok) {
-			const errorData = await fetchResponse.json().catch(() => ({}));
+			const errorData =
+				await parseJsonResponse<ApiErrorBody>(fetchResponse);
 			throw new Error(
-				errorData.detail || `Server error: ${fetchResponse.status}`
+				errorData.detail ?? `Server error: ${fetchResponse.status}`
 			);
 		}
 
-		const response: GenerateViewResponse = await fetchResponse.json();
+		const response = (await fetchResponse.json()) as GenerateViewResponse;
 
 		if (!response || !response.content) {
 			throw new Error("No response from view generation");
@@ -863,13 +871,14 @@ Update the component according to the user's feedback. Return ONLY the complete 
 		});
 
 		if (!fetchResponse.ok) {
-			const errorData = await fetchResponse.json().catch(() => ({}));
+			const errorData =
+				await parseJsonResponse<ApiErrorBody>(fetchResponse);
 			throw new Error(
-				errorData.detail || `Server error: ${fetchResponse.status}`
+				errorData.detail ?? `Server error: ${fetchResponse.status}`
 			);
 		}
 
-		const response: GenerateViewResponse = await fetchResponse.json();
+		const response = (await fetchResponse.json()) as GenerateViewResponse;
 
 		if (!response || !response.content) {
 			throw new Error("No response from view generation");
