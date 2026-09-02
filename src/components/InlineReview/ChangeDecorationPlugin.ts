@@ -359,9 +359,10 @@ export const changeHoverPlugin = ViewPlugin.fromClass(
       const rect = changeEl.getBoundingClientRect();
       const editorRect = this.view.dom.getBoundingClientRect();
 
-      this.hoverWidget.style.position = 'absolute';
-      this.hoverWidget.style.left = `${rect.left - editorRect.left}px`;
-      this.hoverWidget.style.top = `${rect.bottom - editorRect.top + 2}px`;
+      this.hoverWidget.setCssProps({
+        '--hydrate-widget-left': `${rect.left - editorRect.left}px`,
+        '--hydrate-widget-top': `${rect.bottom - editorRect.top + 2}px`,
+      });
 
       this.view.dom.appendChild(this.hoverWidget);
 

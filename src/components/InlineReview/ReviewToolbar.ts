@@ -46,10 +46,12 @@ export class ReviewToolbar {
 
     toolbar.addEventListener('drag', (e) => {
       if (isDragging && e.clientX > 0 && e.clientY > 0) {
-        toolbar.style.left = `${e.clientX - offsetX}px`;
-        toolbar.style.top = `${e.clientY - offsetY}px`;
-        toolbar.style.right = 'auto';
-        toolbar.style.bottom = 'auto';
+        toolbar.setCssProps({
+          '--hydrate-toolbar-left': `${e.clientX - offsetX}px`,
+          '--hydrate-toolbar-top': `${e.clientY - offsetY}px`,
+          '--hydrate-toolbar-right': 'auto',
+          '--hydrate-toolbar-bottom': 'auto',
+        });
       }
     });
 
@@ -101,7 +103,7 @@ export class ReviewToolbar {
     toolbar.appendChild(buttons);
 
     // Add to parent (hidden initially)
-    toolbar.style.display = 'none';
+    toolbar.addClass('hydrate-hidden');
     parentEl.appendChild(toolbar);
 
     return toolbar;
@@ -126,7 +128,7 @@ export class ReviewToolbar {
    * Show the toolbar
    */
   public show(): void {
-    this.containerEl.style.display = 'block';
+    this.containerEl.removeClass('hydrate-hidden');
     this.isVisible = true;
   }
 
@@ -134,7 +136,7 @@ export class ReviewToolbar {
    * Hide the toolbar
    */
   public hide(): void {
-    this.containerEl.style.display = 'none';
+    this.containerEl.addClass('hydrate-hidden');
     this.isVisible = false;
   }
 
@@ -156,10 +158,12 @@ export class ReviewToolbar {
    * Reset position to default (bottom-right)
    */
   public resetPosition(): void {
-    this.containerEl.style.left = 'auto';
-    this.containerEl.style.top = 'auto';
-    this.containerEl.style.right = '16px';
-    this.containerEl.style.bottom = '16px';
+    this.containerEl.setCssProps({
+      '--hydrate-toolbar-left': 'auto',
+      '--hydrate-toolbar-top': 'auto',
+      '--hydrate-toolbar-right': '16px',
+      '--hydrate-toolbar-bottom': '16px',
+    });
   }
 }
 
