@@ -17,6 +17,12 @@ import { RuleEditModal } from "./RuleEditModal"; // <<< IMPORT NEW MODAL
 import { MCPServersConfigModal } from "./MCPServerEditModal";
 import { devLog } from "../utils/logger";
 import { getErrorMessage } from "../utils/errors";
+import {
+	parseJsonResponse,
+	type ApiErrorBody,
+	type LicenseInfo,
+	type RegistrationQuota,
+} from "./licenseTypes";
 import { httpRequest } from "../utils/httpClient";
 import { MCPServerSettingsModal } from "./MCPServerSettingsModal"; // <<< IMPORT MCP SERVER MODAL
 // Settings styles are now compiled into styles.css via hydrate-styles.css
@@ -1513,9 +1519,8 @@ export class HydrateSettingTab extends PluginSettingTab {
 				return;
 			}
 
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const licenseInfo = await (response.json as () => Promise<any>)();
-			const tierName = licenseInfo.tier?.toUpperCase() || "UNKNOWN";
+			const licenseInfo = await parseJsonResponse<LicenseInfo>(response);
+			const tierName = licenseInfo.tier?.toUpperCase() ?? "UNKNOWN";
 			// Prefer the backend's computed lifecycle status (active /
 			// expired / inactive); fall back to the is_active flag for
 			// older backends that don't send `status`.
@@ -1525,7 +1530,9 @@ export class HydrateSettingTab extends PluginSettingTab {
 				inactive: "Inactive",
 			};
 			const statusText =
-				statusLabels[licenseInfo.status] ??
+				(licenseInfo.status
+					? statusLabels[licenseInfo.status]
+					: undefined) ??
 				(licenseInfo.is_active ? "Active" : "Inactive");
 			// Style off the true lifecycle status, not the raw is_active flag
 			// (an expired-but-still-flagged-active key must not show green).
@@ -1639,8 +1646,7 @@ export class HydrateSettingTab extends PluginSettingTab {
 				return;
 			}
 
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const quota = await (response.json as () => Promise<any>)();
+			const quota = await parseJsonResponse<RegistrationQuota>(response);
 			statusDiv.empty();
 
 			statusDiv
@@ -1648,18 +1654,20 @@ export class HydrateSettingTab extends PluginSettingTab {
 				.createEl("strong", { text: "Registration status:" });
 
 			const quotaList = statusDiv.createEl("ul");
+			const used = quota.registration_count ?? 0;
+			const max = quota.max_reregistrations ?? 0;
 			quotaList.createEl("li", {
-				text: `Re-registrations used: ${quota.registration_count} / ${quota.max_reregistrations}`,
+				text: `Re-registrations used: ${used} / ${max}`,
 			});
 			quotaList.createEl("li", {
-				text: `Quota resets: ${new Date(
-					quota.next_reset,
-				).toLocaleDateString()}`,
-			});
-			quotaList.createEl("li", {
-				text: `Remaining: ${
-					quota.max_reregistrations - quota.registration_count
+				text: `Quota resets: ${
+					quota.next_reset
+						? new Date(quota.next_reset).toLocaleDateString()
+						: "unknown"
 				}`,
+			});
+			quotaList.createEl("li", {
+				text: `Remaining: ${max - used}`,
 			});
 		} catch (error) {
 			statusDiv.empty();
@@ -1756,9 +1764,12 @@ export class HydrateSettingTab extends PluginSettingTab {
 					await this.loadRegistrationStatus(statusDiv);
 				}
 			} else {
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				const error = await (response.json as () => Promise<any>)();
-				new Notice(`Error re-registering API keys: ${error.detail}`);
+				const error = await parseJsonResponse<ApiErrorBody>(response);
+				new Notice(
+					`Error re-registering API keys: ${
+						error.detail ?? response.statusText
+					}`,
+				);
 			}
 		} catch (error) {
 			new Notice(
