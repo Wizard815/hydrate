@@ -2,6 +2,20 @@ import { ChildProcess, spawn } from "child_process";
 import { EventEmitter } from "events";
 
 /**
+ * A JSON-RPC frame off the wire. Fields are unvalidated -- the MCP SDK does
+ * the real schema check downstream; this type exists so the transport stops
+ * passing `any` through the event emitter.
+ */
+export interface JsonRpcFrame {
+	jsonrpc?: string;
+	id?: string | number;
+	method?: string;
+	params?: unknown;
+	result?: unknown;
+	error?: { code?: number; message?: string };
+}
+
+/**
  * Base interface for MCP transport mechanisms
  */
 export interface MCPTransport extends EventEmitter {
@@ -50,12 +64,12 @@ export class StdioTransport extends EventEmitter implements MCPTransport {
 			});
 
 			// Handle stdout messages
-			this.process.stdout?.on("data", (data) => {
+			this.process.stdout?.on("data", (data: Buffer) => {
 				this.handleIncomingData(data.toString());
 			});
 
 			// Handle stderr for debugging
-			this.process.stderr?.on("data", (data) => {
+			this.process.stderr?.on("data", (data: Buffer) => {
 				this.emit("stderr", data.toString());
 			});
 
@@ -150,7 +164,7 @@ export class StdioTransport extends EventEmitter implements MCPTransport {
 		for (const line of lines) {
 			if (line.trim()) {
 				try {
-					const message = JSON.parse(line);
+					const message = JSON.parse(line) as JsonRpcFrame;
 					this.emit("message", message);
 				} catch {
 					this.emit(
@@ -190,14 +204,17 @@ export class WebSocketTransport extends EventEmitter implements MCPTransport {
 				};
 
 				this.ws.onmessage = (event) => {
+					// MessageEvent#data is typed any; this transport only ever
+					// receives text frames.
+					const raw = event.data as string;
 					try {
-						const message = JSON.parse(event.data);
+						const message = JSON.parse(raw) as JsonRpcFrame;
 						this.emit("message", message);
 					} catch {
 						this.emit(
 							"error",
 							new Error(
-								`Failed to parse WebSocket message: ${event.data}`,
+								`Failed to parse WebSocket message: ${raw}`,
 							),
 						);
 					}

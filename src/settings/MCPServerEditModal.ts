@@ -8,6 +8,11 @@ import {
 import { MCPServerConfig } from "../mcp/MCPServerConfig";
 import { getErrorMessage } from "../utils/errors";
 
+/** Shape of a Claude-Desktop-style mcpServers config blob. */
+interface McpServersFile {
+	mcpServers?: Record<string, Record<string, unknown>>;
+}
+
 export class MCPServersConfigModal extends Modal {
 	private onSave: (configs: MCPServerConfig[]) => void;
 	private jsonTextArea: TextAreaComponent;
@@ -160,7 +165,7 @@ export class MCPServersConfigModal extends Modal {
 
 	private parseJsonToConfigs(jsonStr: string): MCPServerConfig[] {
 		try {
-			const parsed = JSON.parse(jsonStr);
+			const parsed = JSON.parse(jsonStr) as McpServersFile;
 
 			if (!parsed.mcpServers || typeof parsed.mcpServers !== "object") {
 				throw new Error("JSON must contain 'mcpServers' object");
@@ -169,10 +174,7 @@ export class MCPServersConfigModal extends Modal {
 			const configs: MCPServerConfig[] = [];
 
 			Object.entries(parsed.mcpServers).forEach(
-				([serverId, serverConfig]: [
-					string,
-					Record<string, unknown>,
-				]) => {
+				([serverId, serverConfig]) => {
 					const config: MCPServerConfig = {
 						id: serverId,
 						name: serverId,
