@@ -15,6 +15,14 @@ export type TokenLimitOverrides = {
 
 // output default / input default (context window), per model.
 export const MODEL_TOKEN_LIMITS: Record<string, TokenLimits> = {
+	"gpt-6-luna": { output: 32_768, input: 1_050_000 },
+	"gpt-6-sol": { output: 32_768, input: 1_050_000 },
+	"gpt-6-astra": { output: 32_768, input: 1_050_000 },
+	"claude-opus-5-5": { output: 32_000, input: 1_000_000 },
+	"claude-sonnet-5": { output: 64_000, input: 1_000_000 },
+	"claude-fable-5-1": { output: 64_000, input: 1_000_000 },
+	"gemini-3.8-flash": { output: 65_536, input: 1_048_576 },
+	"gemini-3.5-flash-lite": { output: 65_536, input: 1_048_576 },
 	"gpt-5.5": { output: 32_768, input: 400_000 },
 	"gpt-5.4": { output: 32_768, input: 400_000 },
 	"gpt-5.4-mini": { output: 32_768, input: 400_000 },

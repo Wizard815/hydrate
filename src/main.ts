@@ -66,18 +66,18 @@ export function getReactViewComponent(
 }
 // --- End React View Registry ---
 
-// Define allowed model names (matches backend agent.py ModelName Literal)
+// Current picker models. Backend ModelName also accepts legacy client IDs.
 export const ALLOWED_MODELS = [
-	"gpt-5.4-mini", // Default
-	"gpt-5.5",
-	"gpt-5.4",
-	"gpt-5.4-nano",
-	"claude-opus-4-8",
-	"claude-sonnet-4-6",
+	"gpt-6-luna",
+	"gpt-6-sol",
+	"gpt-6-astra",
+	"claude-opus-5-5",
+	"claude-sonnet-5",
+	"claude-fable-5-1",
 	"claude-haiku-4-5",
 	"gemini-3.1-pro-preview",
-	"gemini-3.5-flash",
-	"gemini-3.1-flash-lite",
+	"gemini-3.8-flash",
+	"gemini-3.5-flash-lite",
 ] as const; // Use const assertion for stricter typing
 
 export type ModelName = (typeof ALLOWED_MODELS)[number]; // Create type from array values
@@ -976,7 +976,7 @@ export default class HydratePlugin extends Plugin {
 		// Ensure the stored value is valid, otherwise return default
 		return ALLOWED_MODELS.includes(this.settings.selectedModel)
 			? this.settings.selectedModel
-			: "gpt-5.4-mini";
+			: "gpt-6-luna";
 	}
 
 	// NOTE: __HYDRATE_DEV__ must be set by the bundler at build time (true for dev, false for prod)

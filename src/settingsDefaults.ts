@@ -54,7 +54,7 @@ export const DEFAULT_SETTINGS: HydratePluginSettings = {
 	registryEntries: [], // Existing initialization
 	rulesRegistryEntries: [], // <<< Initialized as empty
 	chatHistories: [], // Initialize chat histories as empty
-	selectedModel: "gpt-5.4-mini", // Set default model
+	selectedModel: "gpt-6-luna", // Set default model
 	apiKey: "", // <<< ADDED default empty API Key (deprecated, kept for compatibility)
 
 	// --- BYOK Subscription Settings ---
@@ -111,6 +111,29 @@ export function normalizeSettings(raw: unknown): HydratePluginSettings {
 		defaultsBase,
 		(raw ?? {}) as Partial<HydratePluginSettings>,
 	);
+
+	// Upgrade saved selections while retaining provider and workload tier.
+	const modelUpgrades: Record<string, HydratePluginSettings["selectedModel"]> = {
+		"gpt-5.5": "gpt-6-astra",
+		"gpt-5.4": "gpt-6-sol",
+		"gpt-5.4-mini": "gpt-6-luna",
+		"gpt-5.4-nano": "gpt-6-luna",
+		"claude-opus-4-8": "claude-opus-5-5",
+		"claude-sonnet-4-6": "claude-sonnet-5",
+		"gemini-3.5-flash": "gemini-3.8-flash",
+		"gemini-3.1-flash-lite": "gemini-3.5-flash-lite",
+	};
+	const previousModel = settings.selectedModel;
+	const upgradedModel = modelUpgrades[previousModel];
+	if (upgradedModel) {
+		settings.selectedModel = upgradedModel;
+		if (settings.modelTokenLimits?.[previousModel] && !settings.modelTokenLimits[upgradedModel]) {
+			settings.modelTokenLimits = {
+				...settings.modelTokenLimits,
+				[upgradedModel]: { ...settings.modelTokenLimits[previousModel] },
+			};
+		}
+	}
 
 	// --- Initialize Default Format Registry Entry ---
 	// Ensure array exists

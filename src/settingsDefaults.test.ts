@@ -63,10 +63,10 @@ describe("normalizeSettings", () => {
 		expect(result.modelTokenLimits).toEqual({});
 	});
 
-	it("preserves existing values supplied in raw", () => {
-		const raw = { selectedModel: "claude-sonnet-4-6" };
+	it("preserves current model selections supplied in raw", () => {
+		const raw = { selectedModel: "claude-sonnet-5" };
 		const result = normalizeSettings(raw);
-		expect(result.selectedModel).toBe("claude-sonnet-4-6");
+		expect(result.selectedModel).toBe("claude-sonnet-5");
 	});
 
 	it("preserves an existing memoryLastUsed map supplied in raw", () => {
@@ -205,7 +205,7 @@ describe("normalizeSettings", () => {
 
 		expect(result).not.toBe(DEFAULT_SETTINGS);
 
-		result.selectedModel = "claude-sonnet-4-6";
+		result.selectedModel = "claude-sonnet-5";
 		result.registryEntries.push({
 			id: "extra-entry",
 			description: "extra",
@@ -232,5 +232,32 @@ describe("normalizeSettings", () => {
 		result.modelTokenLimits["claude-sonnet-4-6"] = { output: 50_000 };
 
 		expect(DEFAULT_SETTINGS).toEqual(before);
+	});
+});
+
+
+describe("model upgrades", () => {
+	it.each([
+		["gpt-5.5", "gpt-6-astra"],
+		["gpt-5.4", "gpt-6-sol"],
+		["gpt-5.4-mini", "gpt-6-luna"],
+		["gpt-5.4-nano", "gpt-6-luna"],
+		["claude-opus-4-8", "claude-opus-5-5"],
+		["claude-sonnet-4-6", "claude-sonnet-5"],
+		["gemini-3.5-flash", "gemini-3.8-flash"],
+		["gemini-3.1-flash-lite", "gemini-3.5-flash-lite"],
+	])("upgrades %s to %s and preserves token overrides", (oldModel, newModel) => {
+		const raw = { selectedModel: oldModel, modelTokenLimits: { [oldModel]: { output: 4096 } } };
+		const upgraded = normalizeSettings(raw);
+		expect(upgraded.selectedModel).toBe(newModel);
+		expect(upgraded.modelTokenLimits[newModel]).toEqual({ output: 4096 });
+		expect(raw.modelTokenLimits[newModel]).toBeUndefined();
+		expect(normalizeSettings(upgraded)).toEqual(upgraded);
+	});
+	it("keeps existing limits for the destination model", () => {
+		const upgraded = normalizeSettings({ selectedModel: "gpt-5.4-mini", modelTokenLimits: {
+			"gpt-5.4-mini": { output: 4096 }, "gpt-6-luna": { output: 8192 },
+		} });
+		expect(upgraded.modelTokenLimits["gpt-6-luna"]).toEqual({ output: 8192 });
 	});
 });
